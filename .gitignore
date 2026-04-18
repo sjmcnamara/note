@@ -22,3 +22,6 @@ DerivedData/
 
 # OS
 .DS_Store
+
+# Design handoff — local reference only
+handoff_claude_code
