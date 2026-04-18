@@ -1,0 +1,46 @@
+name: NOTE
+options:
+  bundleIdPrefix: com.smcnamara
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  defaultConfig: Debug
+
+targets:
+  NOTE:
+    type: application
+    platform: iOS
+    sources:
+      - path: NOTE
+    info:
+      path: NOTE/Info.plist
+      properties:
+        CFBundleDisplayName: NO.TE
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIAppFonts:
+          - InterTight.ttf
+          - InstrumentSerif-Italic.ttf
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.smcnamara.note
+        SWIFT_VERSION: 5.9
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_LANDSCAPE_ORIENTATION_IPAD: NO
+        INFOPLIST_KEY_UIRequiresFullScreen: YES
+
+schemes:
+  NOTE:
+    build:
+      targets:
+        NOTE: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
