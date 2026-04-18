@@ -11,9 +11,14 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: NOTE
+      - App
+      - Views
+      - Design
+      - Nostr
+      - Assets.xcassets
+      - Fonts
     info:
-      path: NOTE/Info.plist
+      path: Info.plist
       properties:
         CFBundleDisplayName: NO.TE
         UISupportedInterfaceOrientations:

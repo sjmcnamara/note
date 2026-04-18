@@ -5,36 +5,50 @@ struct OnboardingView: View {
     let onComplete: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            OnboardingWordmark()
-                .padding(.bottom, 28)
+        ZStack {
+            Color.noteBg.ignoresSafeArea()
 
-            OnboardingHero()
-                .padding(.bottom, 16)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    OnboardingWordmark()
+                        .padding(.bottom, 28)
 
-            OnboardingSubtext()
-                .padding(.bottom, 32)
+                    OnboardingHero()
+                        .padding(.bottom, 16)
 
-            OnboardingProofList()
+                    OnboardingSubtext()
+                        .padding(.bottom, 32)
 
-            Spacer(minLength: Space.xxl)
+                    OnboardingProofList()
 
-            PrimaryActionButton(title: "Start writing", action: generateAndEnter)
-                .padding(.bottom, Space.m)
+                    Spacer(minLength: 40)
+                }
+                .padding(.top, 24)
+                .padding(.horizontal, Space.gutterH)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize)
 
-            SecondaryActionLink(
-                title: "Advanced setup — keys, relays, import",
-                action: { showAdvanced = true }
-            )
-            .padding(.bottom, Space.l)
+            // CTAs and footer pinned above home indicator
+            VStack(spacing: 0) {
+                Spacer()
+                VStack(spacing: 0) {
+                    PrimaryActionButton(title: "Start writing", action: generateAndEnter)
+                        .padding(.bottom, Space.m)
 
-            PoweredByNostrFooter()
-                .padding(.bottom, Space.sectionGap)
+                    SecondaryActionLink(
+                        title: "Advanced setup — keys, relays, import",
+                        action: { showAdvanced = true }
+                    )
+                    .padding(.bottom, Space.l)
+
+                    PoweredByNostrFooter()
+                        .padding(.bottom, Space.sectionGap)
+                }
+                .padding(.horizontal, Space.gutterH)
+                .background(Color.noteBg)
+            }
         }
-        .padding(.top, 24)
-        .padding(.horizontal, Space.gutterH)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-        .background(Color.noteBg.ignoresSafeArea())
         .sheet(isPresented: $showAdvanced) {
             AdvancedSetupView()
                 .presentationDetents([.large])
