@@ -26,9 +26,13 @@ targets:
         UIAppFonts:
           - InterTight.ttf
           - InstrumentSerif-Italic.ttf
+        UILaunchScreen:
+          UIColorName: noteBg
+        UIRequiresFullScreen: YES
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.smcnamara.note
+        DEVELOPMENT_TEAM: 3V55494FNM
         SWIFT_VERSION: 5.9
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_LANDSCAPE_ORIENTATION_IPAD: NO
