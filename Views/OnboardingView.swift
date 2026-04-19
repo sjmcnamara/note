@@ -5,9 +5,8 @@ struct OnboardingView: View {
     let onComplete: () -> Void
 
     var body: some View {
-        ZStack {
-            Color.noteBg.ignoresSafeArea()
-
+        VStack(spacing: 0) {
+            // Scrollable content area — takes all available space
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     OnboardingWordmark()
@@ -20,35 +19,32 @@ struct OnboardingView: View {
                         .padding(.bottom, 32)
 
                     OnboardingProofList()
-
-                    Spacer(minLength: 40)
                 }
                 .padding(.top, 24)
                 .padding(.horizontal, Space.gutterH)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // CTAs and footer pinned above home indicator
+            // Fixed bottom — always visible above home indicator
             VStack(spacing: 0) {
-                Spacer()
-                VStack(spacing: 0) {
-                    PrimaryActionButton(title: "Start writing", action: generateAndEnter)
-                        .padding(.bottom, Space.m)
+                PrimaryActionButton(title: "Start writing", action: generateAndEnter)
+                    .padding(.bottom, Space.m)
 
-                    SecondaryActionLink(
-                        title: "Advanced setup — keys, relays, import",
-                        action: { showAdvanced = true }
-                    )
-                    .padding(.bottom, Space.l)
+                SecondaryActionLink(
+                    title: "Advanced setup — keys, relays, import",
+                    action: { showAdvanced = true }
+                )
+                .padding(.bottom, Space.l)
 
-                    PoweredByNostrFooter()
-                        .padding(.bottom, Space.sectionGap)
-                }
-                .padding(.horizontal, Space.gutterH)
-                .background(Color.noteBg)
+                PoweredByNostrFooter()
+                    .padding(.bottom, Space.sectionGap)
             }
+            .padding(.horizontal, Space.gutterH)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color.noteBg.ignoresSafeArea())
         .sheet(isPresented: $showAdvanced) {
             AdvancedSetupView()
                 .presentationDetents([.large])
