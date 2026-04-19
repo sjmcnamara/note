@@ -5,45 +5,35 @@ struct OnboardingView: View {
     let onComplete: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Scrollable content area — takes all available space
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    OnboardingWordmark()
-                        .padding(.bottom, 28)
+        VStack(alignment: .leading, spacing: 0) {
+            OnboardingWordmark()
+                .padding(.bottom, 28)
 
-                    OnboardingHero()
-                        .padding(.bottom, 16)
+            OnboardingHero()
+                .padding(.bottom, 16)
 
-                    OnboardingSubtext()
-                        .padding(.bottom, 32)
+            OnboardingSubtext()
+                .padding(.bottom, 32)
 
-                    OnboardingProofList()
-                }
-                .padding(.top, 24)
-                .padding(.horizontal, Space.gutterH)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            OnboardingProofList()
 
-            // Fixed bottom — always visible above home indicator
-            VStack(spacing: 0) {
-                PrimaryActionButton(title: "Start writing", action: generateAndEnter)
-                    .padding(.bottom, Space.m)
+            Spacer()
 
-                SecondaryActionLink(
-                    title: "Advanced setup — keys, relays, import",
-                    action: { showAdvanced = true }
-                )
-                .padding(.bottom, Space.l)
+            PrimaryActionButton(title: "Start writing", action: generateAndEnter)
+                .padding(.bottom, Space.m)
 
-                PoweredByNostrFooter()
-                    .padding(.bottom, Space.sectionGap)
-            }
-            .padding(.horizontal, Space.gutterH)
+            SecondaryActionLink(
+                title: "Advanced setup — keys, relays, import",
+                action: { showAdvanced = true }
+            )
+            .padding(.bottom, Space.l)
+
+            PoweredByNostrFooter()
+                .padding(.bottom, Space.sectionGap)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.top, 24)
+        .padding(.horizontal, Space.gutterH)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .sheet(isPresented: $showAdvanced) {
             AdvancedSetupView()
                 .presentationDetents([.large])
