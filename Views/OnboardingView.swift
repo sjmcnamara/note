@@ -44,7 +44,6 @@ struct OnboardingView: View {
             .padding(.horizontal, Space.gutterH)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color.noteBg.ignoresSafeArea())
         .sheet(isPresented: $showAdvanced) {
             AdvancedSetupView()
                 .presentationDetents([.large])

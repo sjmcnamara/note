@@ -25,7 +25,6 @@ private struct TimelinePlaceholderView: View {
                 .foregroundStyle(Color.noteInkDim)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.noteBg.ignoresSafeArea())
     }
 }
 
