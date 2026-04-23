@@ -126,7 +126,15 @@ struct TimelineView: View {
             }
             .background(Color.noteBg.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
-            .sheet(isPresented: $showSearch) { SearchView() }
+            .overlay {
+                if showSearch {
+                    SearchView(notes: notes, onDismiss: {
+                        withAnimation(.easeInOut(duration: 0.15)) { showSearch = false }
+                    })
+                    .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.15), value: showSearch)
         }
     }
 }
@@ -159,7 +167,7 @@ private struct TimelineHeader: View {
 
             HStack(spacing: Space.m) {
                 Button {
-                    showSearch = true
+                    withAnimation(.easeInOut(duration: 0.15)) { showSearch = true }
                 } label: {
                     IconTile(systemName: "magnifyingglass")
                 }
