@@ -47,16 +47,20 @@ struct EditorView: View {
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .onChange(of: note.title)             { _, _ in scheduleSave() }
-        .onChange(of: note.body)              { _, _ in scheduleSave() }
-        .onChange(of: note.todos.map(\.done)) { _, _ in scheduleSave() }
-        .onChange(of: note.todos.map(\.text)) { _, _ in scheduleSave() }
+        .onChange(of: note.title)             { _, _ in markEdited() }
+        .onChange(of: note.body)              { _, _ in markEdited() }
+        .onChange(of: note.todos.map(\.done)) { _, _ in markEdited() }
+        .onChange(of: note.todos.map(\.text)) { _, _ in markEdited() }
         .onDisappear { onSave(note) }
+    }
+
+    private func markEdited() {
+        note.updatedAt = Date()
+        scheduleSave()
     }
 
     private func scheduleSave() {
         saveTask?.cancel()
-        note.updatedAt = Date()
         withAnimation(.spring(duration: 0.2)) { saving = true }
         saveTask = Task {
             try? await Task.sleep(for: .milliseconds(400))
