@@ -56,12 +56,12 @@ struct EditorView: View {
 
     private func scheduleSave() {
         saveTask?.cancel()
+        note.updatedAt = Date()
         withAnimation(.spring(duration: 0.2)) { saving = true }
         saveTask = Task {
             try? await Task.sleep(for: .milliseconds(400))
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                note.updatedAt = Date()
                 onSave(note)
                 withAnimation(.spring(duration: 0.4)) { saving = false }
             }
