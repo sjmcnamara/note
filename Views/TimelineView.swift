@@ -109,6 +109,14 @@ struct TimelineView: View {
         return notes.filter { $0.tags.contains(t) }
     }
 
+    private func handleSave(_ updated: Note) {
+        if let idx = notes.firstIndex(where: { $0.id == updated.id }) {
+            notes[idx] = updated
+        } else if !updated.title.isEmpty || !updated.body.isEmpty || !updated.todos.isEmpty {
+            notes.insert(updated, at: 0)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
@@ -119,14 +127,14 @@ struct TimelineView: View {
                     ScrollView {
                         LazyVStack(spacing: 0) {
                             ForEach(makeGroups(filtered)) { group in
-                                DaySection(group: group)
+                                DaySection(group: group, onSave: handleSave)
                             }
                         }
                         .padding(.bottom, 96)
                     }
                 }
 
-                TimelineComposeBar()
+                TimelineComposeBar(onSave: handleSave)
                     .padding(.horizontal, Space.gutterH)
                     .padding(.bottom, 24)
             }
@@ -253,6 +261,7 @@ private struct TagChip: View {
 
 private struct DaySection: View {
     let group: DayGroup
+    let onSave: (Note) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -274,7 +283,7 @@ private struct DaySection: View {
                             .frame(height: 1)
                             .padding(.leading, Space.gutterH)
                     }
-                    NavigationLink { EditorView(note: note) } label: {
+                    NavigationLink { EditorView(note: note, onSave: onSave) } label: {
                         NoteRow(note: note)
                     }
                     .buttonStyle(.plain)
@@ -347,6 +356,8 @@ private struct NoteRow: View {
 // MARK: - Compose bar
 
 private struct TimelineComposeBar: View {
+    let onSave: (Note) -> Void
+
     var body: some View {
         HStack(spacing: 0) {
             Text("Write something…")
@@ -361,7 +372,7 @@ private struct TimelineComposeBar: View {
                 .frame(width: 36, height: 36)
 
             NavigationLink {
-                EditorView(note: Note(title: "", body: "", tags: [], createdAt: Date(), updatedAt: Date()))
+                EditorView(note: Note(title: "", body: "", tags: [], createdAt: Date(), updatedAt: Date()), onSave: onSave)
             } label: {
                 Image(systemName: "plus")
                     .font(.system(size: 17, weight: .medium))

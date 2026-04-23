@@ -7,9 +7,11 @@ struct EditorView: View {
     @State private var saving = false
     @State private var saveTask: Task<Void, Never>?
     @Environment(\.dismiss) private var dismiss
+    let onSave: (Note) -> Void
 
-    init(note: Note) {
+    init(note: Note, onSave: @escaping (Note) -> Void) {
         _note = State(initialValue: note)
+        self.onSave = onSave
     }
 
     private var wordCount: Int {
@@ -45,10 +47,11 @@ struct EditorView: View {
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .onChange(of: note.title)            { _, _ in scheduleSave() }
-        .onChange(of: note.body)             { _, _ in scheduleSave() }
+        .onChange(of: note.title)             { _, _ in scheduleSave() }
+        .onChange(of: note.body)              { _, _ in scheduleSave() }
         .onChange(of: note.todos.map(\.done)) { _, _ in scheduleSave() }
         .onChange(of: note.todos.map(\.text)) { _, _ in scheduleSave() }
+        .onDisappear { onSave(note) }
     }
 
     private func scheduleSave() {
@@ -59,7 +62,7 @@ struct EditorView: View {
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 note.updatedAt = Date()
-                // MockBackup.publish would be called here when wired
+                onSave(note)
                 withAnimation(.spring(duration: 0.4)) { saving = false }
             }
         }
@@ -327,6 +330,7 @@ private struct ToolBtn: View {
 #Preview {
     NavigationStack {
         EditorView(note: Note(
+
             title: "Thursday standup",
             body: "Short week. Focus on shipping the onboarding flow — S is unblocked on pricing once copy lands.",
             tags: ["work", "launch"],
@@ -338,6 +342,6 @@ private struct ToolBtn: View {
             ],
             createdAt: Date(),
             updatedAt: Date()
-        ))
+        ), onSave: { _ in })
     }
 }
