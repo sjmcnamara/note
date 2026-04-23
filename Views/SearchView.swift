@@ -49,7 +49,6 @@ private struct SearchCard: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        AnswerSection(query: query)
                         if !matches.isEmpty {
                             NotesSection(notes: matches, onTap: { _ in onDismiss() })
                         }
@@ -110,73 +109,6 @@ private struct QueryBar: View {
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(500))
                 caretOn.toggle()
-            }
-        }
-    }
-}
-
-// MARK: - Answer section
-
-private struct AnswerSection: View {
-    let query: String
-    @State private var loading = false
-    @State private var answer: String? = nil
-    @State private var pending: Task<Void, Never>?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Space.m) {
-            Text("Answer")
-                .font(NoteFont.captionS)
-                .foregroundStyle(Color.noteInkMute)
-
-            if loading {
-                VStack(alignment: .leading, spacing: Space.m) {
-                    SkeletonLine(fraction: 0.82)
-                    SkeletonLine(fraction: 0.57)
-                }
-            } else if let text = answer {
-                Text(text)
-                    .font(NoteFont.body)
-                    .foregroundStyle(Color.noteInkDim)
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.noteAlt)
-        .onChange(of: query, initial: true) { _, q in schedule(q) }
-    }
-
-    private func schedule(_ q: String) {
-        pending?.cancel()
-        answer = nil
-        guard !q.isEmpty else { loading = false; return }
-        loading = true
-        pending = Task {
-            try? await Task.sleep(for: .milliseconds(400))
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                loading = false
-                answer = "A few mentions across your notes. Looks like this comes up often."
-            }
-        }
-    }
-}
-
-private struct SkeletonLine: View {
-    let fraction: CGFloat
-    @State private var opacity: Double = 0.3
-
-    var body: some View {
-        GeometryReader { geo in
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color.noteMuted)
-                .frame(width: geo.size.width * fraction, height: 11)
-        }
-        .frame(height: 11)
-        .opacity(opacity)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) {
-                opacity = 0.7
             }
         }
     }
