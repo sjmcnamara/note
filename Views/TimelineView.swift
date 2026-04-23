@@ -14,8 +14,14 @@ private extension Note {
 
         return [
             Note(title: "Thursday standup",
-                 body: "Finalize launch copy. Rev pricing with S. Ship onboarding by EOW.",
+                 body: "Short week. Focus on shipping the onboarding flow — S is unblocked on pricing once copy lands.",
                  tags: ["work"],
+                 todos: [
+                     TodoItem(text: "Finalize launch copy w/ M"),
+                     TodoItem(text: "Rev pricing tiers — send to S"),
+                     TodoItem(text: "Cancel 2pm", done: true),
+                     TodoItem(text: "Ship onboarding by Fri"),
+                 ],
                  createdAt: ago(0, h: 9, m: 12), updatedAt: ago(0, h: 9, m: 12)),
             Note(title: "",
                  body: "Mom — Sunday 4pm. Bring pie.",

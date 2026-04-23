@@ -1,10 +1,17 @@
 import Foundation
 
+struct TodoItem: Identifiable, Equatable {
+    var id = UUID()
+    var text: String
+    var done: Bool = false
+}
+
 struct Note: Identifiable {
     var id: UUID = UUID()
     var title: String
     var body: String
     var tags: [String]
+    var todos: [TodoItem] = []
     var createdAt: Date
     var updatedAt: Date
 }
