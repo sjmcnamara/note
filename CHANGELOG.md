@@ -7,8 +7,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] — 2026-04-24
+
 ### Added
-- Screen 2 — Timeline (in progress)
+- Screen 2 — Timeline: day-grouped feed (Today / Yesterday / weekday / date), tag strip with in-place filtering, floating compose bar
+- `TimelineHeader` with live date, NO.TE wordmark (tracking 0.8), search and settings icon tiles
+- `TagStrip` — horizontal scroll, active tag underlined with 2pt ink bar
+- `NoteRow` — 36pt time column, title + body + tags, 1pt rule dividers between rows within a group
+- `TimelineComposeBar` — floating pill with compose shadow, mic icon, plus button
+- 8 seeded mock notes spanning today, yesterday, and two older days
+- `EditorView` stub (placeholder, full implementation in screen 4)
+- `SearchView` stub (placeholder, full implementation in screen 3)
+- `SettingsView` stub (placeholder, full implementation in screen 5)
 
 ---
 
