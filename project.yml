@@ -27,6 +27,7 @@ targets:
           - InterTight.ttf
           - InstrumentSerif-Italic.ttf
         UILaunchScreen:
+          UIImageName: LaunchLogo
           UIColorName: noteBg
         UIRequiresFullScreen: YES
     settings:
@@ -37,6 +38,7 @@ targets:
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_LANDSCAPE_ORIENTATION_IPAD: NO
         INFOPLIST_KEY_UIRequiresFullScreen: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
 
 schemes:
   NOTE:

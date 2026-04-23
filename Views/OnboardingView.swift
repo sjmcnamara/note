@@ -22,22 +22,12 @@ struct OnboardingView: View {
             PrimaryActionButton(title: "Start writing", action: generateAndEnter)
                 .padding(.bottom, Space.m)
 
-            SecondaryActionLink(
-                title: "Advanced setup — keys, relays, import",
-                action: { showAdvanced = true }
-            )
-            .padding(.bottom, Space.l)
-
             PoweredByNostrFooter()
                 .padding(.bottom, Space.sectionGap)
         }
         .padding(.top, 24)
         .padding(.horizontal, Space.gutterH)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .sheet(isPresented: $showAdvanced) {
-            AdvancedSetupView()
-                .presentationDetents([.large])
-        }
     }
 
     private func generateAndEnter() {
@@ -67,29 +57,26 @@ private struct OnboardingWordmark: View {
 private struct OnboardingHero: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.xs) {
-            Text("Own your words.")
-                .font(NoteFont.displayXL)
+            // Added \n\n for paragraph look and bumped size to 44
+            Text("Own your own words.")
+                .font(NoteFont.italic(40)) 
                 .foregroundStyle(Color.noteInk)
                 .minimumScaleFactor(0.9)
-            Text("yours alone.")
-                .font(NoteFont.italic(40))
-                .foregroundStyle(Color.noteInk)
-                .minimumScaleFactor(0.9)
+                .multilineTextAlignment(.leading) // Keeps the "words" left-aligned
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Own your words — yours alone")
+        .accessibilityLabel("Own your own words.")
     }
 }
-
 // MARK: - Subtext
 
 private struct OnboardingSubtext: View {
     var body: some View {
-        Text("Everything stays on this device. Nothing leaves unless you ask it to.")
-            .font(NoteFont.body)
+        Text("A space for thoughts that are yours alone — written in your own words, kept on your own terms.")
+            .font(NoteFont.titleS)
             .foregroundStyle(Color.noteInkDim)
-            .frame(maxWidth: 260, alignment: .leading)
-            .minimumScaleFactor(0.9)
+            .frame(alignment: .leading)
+            .minimumScaleFactor(1.1)
     }
 }
 
@@ -104,17 +91,17 @@ struct ProofPoint {
         ProofPoint(
             icon: "internaldrive",
             title: "Local",
-            body: "Notes live on your device, and works perfectly offline. No account required."
+            body: "Notes stay on your device — not in the cloud, not on a platform, and not in some random data center."
         ),
         ProofPoint(
             icon: "eye.slash",
-            title: "Privacy",
-            body: "No trackers, no analytics, no ads — ever."
+            title: "Private",
+            body: "No signups, no emails, no profiling. You don't need permission to have a voice."
         ),
         ProofPoint(
             icon: "lock.shield",
-            title: "Encrypted backup · optional",
-            body: "Encrypt a backup with a key only you hold. Recover your notes to a new device."
+            title: "Encrypted",
+            body: "Secure your backup with a key only you control — then restore your notes on any new device."
         ),
     ]
 }
@@ -135,17 +122,17 @@ private struct OnboardingProofRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: Space.xxl) {
             Image(systemName: point.icon)
-                .font(.system(size: 15, weight: .light))
+                .font(.system(size: 17, weight: .light))
                 .foregroundStyle(Color.noteInkDim)
                 .frame(width: 22, alignment: .leading)
 
             VStack(alignment: .leading, spacing: Space.xs) {
                 Text(point.title)
-                    .font(Font.custom("Inter Tight", size: 13.5).weight(.semibold))
+                    .font(Font.custom("Inter Tight", size: 15).weight(.semibold))
                     .foregroundStyle(Color.noteInk)
                     .minimumScaleFactor(0.9)
                 Text(point.body)
-                    .font(Font.custom("Inter Tight", size: 12.5))
+                    .font(Font.custom("Inter Tight", size: 14))
                     .foregroundStyle(Color.noteInkDim)
                     .minimumScaleFactor(0.9)
             }
@@ -162,7 +149,27 @@ struct PrimaryActionButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(NoteFont.titleS)
+                .font(NoteFont.titleM)
+                .scaleEffect(1.1)
+                .foregroundStyle(Color.noteBg)
+                .padding(.horizontal, 100) // Gives it a nice width without being full-screen
+                .frame(height: 54)        // Slightly taller feels more premium
+                .background(Color.noteInk, in: RoundedRectangle(cornerRadius: Radius.xl))
+        }
+        .buttonStyle(.plain)
+        // Center the button since it's no longer full-width
+        .frame(maxWidth: .infinity, alignment: .center) 
+    }
+}
+struct OPrimaryActionButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(NoteFont.titleM)
+                .scaleEffect(1.1)      // Scaling just the text inside is safer
                 .foregroundStyle(Color.noteBg)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
@@ -193,8 +200,8 @@ struct SecondaryActionLink: View {
 
 struct PoweredByNostrFooter: View {
     var body: some View {
-        Text("Powered by Nostr · open protocol")
-            .font(Font.custom("Inter Tight", size: 10.5))
+        Text("Built on Nostr.")
+            .font(Font.custom("Inter Tight", size: 12))
             .foregroundStyle(Color.noteInkMute)
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)
