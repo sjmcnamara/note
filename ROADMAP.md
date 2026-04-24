@@ -63,14 +63,17 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 
 ---
 
-## Up next
+### [0.6.0] Screen 6 — Advanced setup
+- Full implementation replacing stub: hero with italic serif on "own keys.", sub-copy, 3 bordered option cards, privacy + Nostr credit footer
+- `Generate` → `MockIdentity.generate()` + success haptic + dismiss (or onboarding onComplete)
+- `Import existing nsec` → pushes new `KeyImportView` stub (Screen 7 to come)
+- `Restore from backup` → transient toast ("Restore flow lands with real Nostr.")
+- Recommended variant on Generate: 1.5pt `noteInk` border + `recommended` badge
+- Onboarding gains secondary "Advanced setup" link → sheet-presents `AdvancedSetupView` in its own NavigationStack
 
-### Screen 6 — Advanced setup
-- Three options: Generate (recommended), Import nsec, Restore from backup
-- Italic serif moment on "own keys."
-- Generate → `MockIdentity.generate()` → dismiss
-- Import → push `KeyImportView`
-- Restore → stub toast
+---
+
+## Up next
 
 ### Screen 7 — Key import
 - Paste field with monospace text + blinking caret
