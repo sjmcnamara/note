@@ -8,6 +8,8 @@ struct NOTEApp: App {
 
     init() {
         UIWindow.appearance().backgroundColor = UIColor(named: "noteBg")
+        // init() must return immediately — the watchdog fires if we block here.
+        // All store work happens in .task below, after the launch window closes.
     }
 
     var body: some Scene {
@@ -16,40 +18,34 @@ struct NOTEApp: App {
                 ContentView()
                     .modelContainer(container)
             } else {
-                // Shown while the store is being created on a background thread.
-                // Identical to the launch screen background so the transition
-                // is invisible. ContentView is never shown until the container
-                // is fully ready, so modelContext is always available on tap.
                 Color.noteBg
                     .ignoresSafeArea()
-                    .task(priority: .userInitiated) {
-                        container = await Self.makeContainer()
-                    }
+                    .task { container = Self.openStore() }
             }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .background {
-                try? container?.mainContext.save()
-            }
+            if phase == .background { try? container?.mainContext.save() }
         }
     }
 
-    // Runs ModelContainer.init() on a background thread so the main actor
-    // stays free during the (potentially slow) first-install SQLite setup.
-    // NSPersistentContainer.loadPersistentStores is documented thread-safe;
-    // mainContext is only ever touched on the main actor via SwiftUI environment.
-    private static func makeContainer() async -> ModelContainer {
-        await Task.detached(priority: .userInitiated) {
-            let appSupport = FileManager.default
-                .urls(for: .applicationSupportDirectory, in: .userDomainMask)
-                .first!
-            try? FileManager.default.createDirectory(
-                at: appSupport, withIntermediateDirectories: true)
-            do {
-                return try ModelContainer(for: Note.self)
-            } catch {
-                fatalError("ModelContainer init failed: \(error)")
-            }
-        }.value
+    // Synchronous on the main actor — avoids Task.detached round-trips that
+    // make things slower. Explicit URL + cloudKitDatabase: .none eliminates
+    // two known slow paths:
+    //   1. CoreData's directory-discovery security walk (saw 512 / sandbox errors)
+    //   2. A CloudKit probe that can time out even without the entitlement
+    private static func openStore() -> ModelContainer {
+        let appSupport = FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
+
+        let storeURL = appSupport.appendingPathComponent("default.store")
+        let schema  = Schema([Note.self, TodoItem.self])
+        let config  = ModelConfiguration(schema: schema, url: storeURL, cloudKitDatabase: .none)
+
+        do {
+            return try ModelContainer(for: schema, configurations: [config])
+        } catch {
+            fatalError("ModelContainer failed: \(error)")
+        }
     }
 }
