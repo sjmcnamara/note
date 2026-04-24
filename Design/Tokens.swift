@@ -91,3 +91,16 @@ enum Motion {
     static let toggleSwap: Double = 0.2
     static let sheetPresent: Double = 0.3
 }
+
+// MARK: - Environment
+
+private struct TextSizeStepKey: EnvironmentKey {
+    static let defaultValue = 0
+}
+
+extension EnvironmentValues {
+    var textSizeStep: Int {
+        get { self[TextSizeStepKey.self] }
+        set { self[TextSizeStepKey.self] = newValue }
+    }
+}

@@ -297,19 +297,27 @@ private struct SettingRows: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            settingsRow {
-                Text("Text size")
-                    .font(NoteFont.body)
-                    .foregroundStyle(Color.noteInk)
-                Spacer()
-                HStack(spacing: Space.m) {
+            VStack(alignment: .leading, spacing: Space.xs) {
+                HStack {
+                    Text("Text size")
+                        .font(NoteFont.body)
+                        .foregroundStyle(Color.noteInk)
+                    Spacer()
                     Text(textSizeLabel)
                         .font(NoteFont.captionS)
                         .foregroundStyle(Color.noteInkMute)
-                    Stepper("Text size", value: $textSizeStep, in: -1...1)
-                        .labelsHidden()
                 }
+                Slider(
+                    value: Binding(
+                        get: { Double(textSizeStep) },
+                        set: { textSizeStep = Int($0.rounded()) }
+                    ),
+                    in: -3...3,
+                    step: 1
+                )
+                .tint(Color.noteInk)
             }
+            .padding(.vertical, Space.l)
 
             Rectangle().fill(Color.noteRule).frame(height: 1)
 
@@ -345,9 +353,9 @@ private struct SettingRows: View {
 
     private var textSizeLabel: String {
         switch textSizeStep {
-        case -1: return "Small"
-        case  1: return "Large"
-        default: return "Default"
+        case ..<0: return "Small"
+        case 1...: return "Large"
+        default:   return "Default"
         }
     }
 }
