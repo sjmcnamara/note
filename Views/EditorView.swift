@@ -271,11 +271,11 @@ private struct TagsRow: View {
 
 private struct BodyField: View {
     @Binding var text: String
-    @Environment(\.textSizeStep) private var textSizeStep
+    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         TextEditor(text: $text)
-            .font(.custom("Inter Tight", size: 15 + CGFloat(textSizeStep)))
+            .font(.custom("Inter Tight", size: 15 + CGFloat(settings.textSizeStep)))
             .foregroundStyle(Color.noteInk)
             .tint(Color.noteInk)
             .scrollContentBackground(.hidden)
@@ -283,7 +283,7 @@ private struct BodyField: View {
             .frame(minHeight: 120)
             .textContentType(.none)
             .padding(.bottom, Space.sectionGap)
-            .id(textSizeStep)
+            .id(settings.textSizeStep)
     }
 }
 
@@ -326,7 +326,7 @@ private struct TodoRow: View {
     let onEdit: () -> Void
     let onReturn: () -> Void
     let onDelete: () -> Void
-    @Environment(\.textSizeStep) private var textSizeStep
+    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         HStack(alignment: .center, spacing: Space.m) {
@@ -335,13 +335,13 @@ private struct TodoRow: View {
                 onEdit()
             } label: {
                 Text(todo.done ? "▪" : "▢")
-                    .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep)))
+                    .font(.custom("Inter Tight", size: 14 + CGFloat(settings.textSizeStep)))
                     .foregroundStyle(todo.done ? Color.noteInkDim : Color.noteInkMute)
             }
             .buttonStyle(.plain)
 
             TextField("", text: $todo.text)
-                .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep)))
+                .font(.custom("Inter Tight", size: 14 + CGFloat(settings.textSizeStep)))
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)
@@ -428,4 +428,5 @@ private struct ToolBtn: View {
         EditorView(note: note)
     }
     .modelContainer(container)
+    .environment(AppSettings())
 }

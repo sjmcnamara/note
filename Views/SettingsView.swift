@@ -293,7 +293,7 @@ private struct AppearanceTile: View {
 private struct SettingRows: View {
     @AppStorage("tagSuggestions") private var tagSuggestions = true
     @AppStorage("morningPrompt")  private var morningPrompt  = false
-    @AppStorage("textSizeStep")   private var textSizeStep   = 0
+    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -306,11 +306,12 @@ private struct SettingRows: View {
                     Text(textSizeLabel)
                         .font(NoteFont.captionS)
                         .foregroundStyle(Color.noteInkMute)
+                        .monospacedDigit()
                 }
                 Slider(
                     value: Binding(
-                        get: { Double(textSizeStep) },
-                        set: { textSizeStep = Int($0.rounded()) }
+                        get: { Double(settings.textSizeStep) },
+                        set: { settings.textSizeStep = Int($0.rounded()) }
                     ),
                     in: -3...3,
                     step: 1
@@ -352,7 +353,7 @@ private struct SettingRows: View {
     }
 
     private var textSizeLabel: String {
-        switch textSizeStep {
+        switch settings.textSizeStep {
         case ..<0: return "Small"
         case 1...: return "Large"
         default:   return "Default"
@@ -521,4 +522,5 @@ private struct FooterWordmark: View {
     NavigationStack {
         SettingsView()
     }
+    .environment(AppSettings())
 }

@@ -245,7 +245,7 @@ private struct DaySection: View {
 
 private struct NoteRow: View {
     let note: Note
-    @Environment(\.textSizeStep) private var textSizeStep
+    @Environment(AppSettings.self) private var settings
 
     private static let timeFmt: DateFormatter = {
         let f = DateFormatter()
@@ -271,7 +271,7 @@ private struct NoteRow: View {
 
                 if !note.body.isEmpty {
                     Text(note.body)
-                        .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep)))
+                        .font(.custom("Inter Tight", size: 14 + CGFloat(settings.textSizeStep)))
                         .foregroundStyle(Color.noteInkDim)
                         .lineLimit(2)
                 }
