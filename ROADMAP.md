@@ -21,23 +21,27 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Day-grouped feed, tag strip, note rows, floating compose bar
 - Stub views for Editor, Search, Settings
 
+### [0.3.0] Screen 3 — Search & Ask
+- Overlay-based search (not sheet) with dim backdrop, top-anchored card
+- Live filter across title, body, and tags
+- Blinking 2pt caret in query bar (1 Hz, off under Reduce Motion)
+- Action rows: "New note with this tag", "See all in …"
+- AI answer block removed — local search only for now
+
+### [0.4.0] Screen 4 — Editor + SwiftData persistence
+- Full editor: title (last word in Instrument Serif italic), body, tags, todos
+- Saved dot pulsing on 400ms debounced write
+- Todo: checkbox toggle, Return adds next item, × deletes
+- Tags: inline entry on + tap, Return/blur commits
+- SwiftData: `Note` and `TodoItem` as `@Model` classes, cascade delete
+- `@Query` replaces seed data in Timeline; compose inserts into modelContext
+- `@AppStorage` onboarding flag — shows once, then opens straight to Timeline
+- First-run fix: store created in `.task` after launch window, explicit URL,
+  `cloudKitDatabase: .none` — tested fast on Release build
+
 ---
 
 ## Up next
-
-### Screen 3 — Search & Ask
-- Sheet from search icon
-- Local filter against mock notes
-- Blinking 2pt caret after query text (1Hz, off under Reduce Motion)
-- Mock AI answer (400ms delay, canned text)
-- Action rows with small icon tiles
-
-### Screen 4 — Editor
-- Bindable `Note`, title + body fields
-- One italic serif word in title
-- Ghost pill toolbar (heading, list, todo, image)
-- Saved dot pulsing on debounced local write (400ms)
-- AI margin note pill at bottom of body
 
 ### Screen 5 — Settings
 - Identity card: npub + hidden nsec + FaceID-gated Reveal (auto-hide 30s)

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var onboardingComplete = false
+    @AppStorage("hasCompletedOnboarding") private var onboardingComplete = false
 
     var body: some View {
         if onboardingComplete {
