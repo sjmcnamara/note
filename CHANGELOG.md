@@ -9,6 +9,47 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.4.0] — 2026-04-24
+
+### Added
+- Screen 4 — Editor: full implementation replacing stub
+- `TitleField` — styled display (last word in Instrument Serif italic) switches to plain TextField on tap; always in view hierarchy so focus is reliable
+- `TagsRow` — inline tag entry; tap + to open TextField, Return/blur commits the tag
+- `BodyField` — TextEditor with 1.6× line height, hidden scroll background
+- `TodoSection` / `TodoRow` — checkbox toggle, editable text, Return adds next item, × button deletes
+- `EditorTopBar` — back navigation, save-state indicator dot (animates on change), share + ellipsis stubs
+- `EditorToolBar` — word count, heading / list / todo pill buttons
+- Debounced autosave (400 ms) with animated save-state dot; explicit save on `onDisappear`
+- New note lifecycle: insert into `modelContext` on compose, delete on back if still empty (`isNew` flag)
+
+### Changed
+- `Note` and `TodoItem` converted from structs to SwiftData `@Model final class`
+- `@Relationship(deleteRule: .cascade)` on `Note.todos` — deleting a note removes its todo items
+- `TimelineView` — `@State` seed data replaced with `@Query(sort: \Note.createdAt, order: .reverse)`; compose bar now inserts via `modelContext` and navigates with `navigationDestination(item:)`
+- `EditorView` — `@State + onSave callback` pattern replaced with `@Bindable + modelContext.save()`
+- `ContentView` — `@State var onboardingComplete` replaced with `@AppStorage("hasCompletedOnboarding")` so onboarding only shows on first launch
+
+### Fixed
+- App watchdog kill on first install: `ModelContainer` creation moved to `.task {}` after the launch window closes; `init()` now returns immediately
+- `Library/Application Support` pre-created before container setup to avoid CoreData slow-recovery path
+- `scenePhase → .background` triggers explicit `modelContext.save()` as safety net for force-quit scenarios
+- Image icon removed from editor toolbar (was non-functional; moved to backlog)
+
+---
+
+## [0.3.0] — 2026-04-24
+
+### Added
+- Screen 3 — Search & Ask: overlay-based search (not a sheet) with dim backdrop and top-anchored card
+- Live note filter across title, body, and tags
+- Custom blinking caret in query bar (respects `accessibilityReduceMotion`)
+- Action rows: "New note with this tag" and "See all in …"
+
+### Changed
+- Search presented as inline `.overlay` with fade transition — wireframe overrides spec sheet behaviour
+
+---
+
 ## [0.2.0] — 2026-04-24
 
 ### Added
