@@ -12,7 +12,9 @@ enum KeychainKey: String {
 
 /// Abstraction over secure string storage.
 /// Production code uses `KeychainService`; previews/tests use `InMemorySecureStorage`.
-protocol SecureStorage {
+/// Conformers are `Sendable` — operations may be dispatched to background queues
+/// (e.g. the Rust FFI init path in `IdentityService`).
+protocol SecureStorage: Sendable {
     @discardableResult func save(key: KeychainKey, value: String) -> Bool
     func load(key: KeychainKey) -> String?
     @discardableResult func delete(key: KeychainKey) -> Bool
@@ -20,7 +22,7 @@ protocol SecureStorage {
 
 // MARK: - Keychain-backed storage
 
-final class KeychainService: SecureStorage {
+final class KeychainService: SecureStorage, @unchecked Sendable {
     static let shared = KeychainService()
     private init() {}
 
@@ -71,21 +73,25 @@ final class KeychainService: SecureStorage {
 
 // MARK: - In-memory storage (previews + tests)
 
-final class InMemorySecureStorage: SecureStorage {
+final class InMemorySecureStorage: SecureStorage, @unchecked Sendable {
     private var store: [String: String] = [:]
+    private let lock = NSLock()
 
     @discardableResult
     func save(key: KeychainKey, value: String) -> Bool {
+        lock.lock(); defer { lock.unlock() }
         store[key.rawValue] = value
         return true
     }
 
     func load(key: KeychainKey) -> String? {
-        store[key.rawValue]
+        lock.lock(); defer { lock.unlock() }
+        return store[key.rawValue]
     }
 
     @discardableResult
     func delete(key: KeychainKey) -> Bool {
-        store.removeValue(forKey: key.rawValue) != nil
+        lock.lock(); defer { lock.unlock() }
+        return store.removeValue(forKey: key.rawValue) != nil
     }
 }
