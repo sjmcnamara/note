@@ -20,20 +20,27 @@ enum NoteFont {
     private static let family       = "Inter Tight"
     private static let serifItalic  = "InstrumentSerif-Italic"
 
-    static let displayXL = Font.custom(family, size: 34).weight(.medium)
-    static let displayL  = Font.custom(family, size: 28).weight(.medium)
-    static let display   = Font.custom(family, size: 26).weight(.medium)
-    static let headline  = Font.custom(family, size: 22).weight(.medium)
-    static let titleM    = Font.custom(family, size: 16).weight(.medium)
-    static let titleS    = Font.custom(family, size: 15).weight(.medium)
-    static let body      = Font.custom(family, size: 14)
-    static let bodyS     = Font.custom(family, size: 13)
-    static let caption   = Font.custom(family, size: 12)
-    static let captionS  = Font.custom(family, size: 11)
-    static let micro     = Font.custom(family, size: 10)
+    static let displayXL = Font.custom(family, size: 34, relativeTo: .largeTitle).weight(.medium)
+    static let displayL  = Font.custom(family, size: 28, relativeTo: .largeTitle).weight(.medium)
+    static let display   = Font.custom(family, size: 26, relativeTo: .title).weight(.medium)
+    static let headline  = Font.custom(family, size: 22, relativeTo: .title2).weight(.medium)
+    static let titleM    = Font.custom(family, size: 16, relativeTo: .headline).weight(.medium)
+    static let titleS    = Font.custom(family, size: 15, relativeTo: .subheadline).weight(.medium)
+    static let body      = Font.custom(family, size: 14, relativeTo: .body)
+    static let bodyS     = Font.custom(family, size: 13, relativeTo: .callout)
+    static let caption   = Font.custom(family, size: 12, relativeTo: .caption)
+    static let captionS  = Font.custom(family, size: 11, relativeTo: .caption2)
+    static let micro     = Font.custom(family, size: 10, relativeTo: .caption2)
 
     static func italic(_ size: CGFloat) -> Font {
-        Font.custom(serifItalic, size: size)
+        let style: Font.TextStyle
+        switch size {
+        case ..<14:   style = .caption
+        case 14..<20: style = .body
+        case 20..<28: style = .title2
+        default:      style = .title
+        }
+        return Font.custom(serifItalic, size: size, relativeTo: style)
     }
 }
 
@@ -91,3 +98,4 @@ enum Motion {
     static let toggleSwap: Double = 0.2
     static let sheetPresent: Double = 0.3
 }
+

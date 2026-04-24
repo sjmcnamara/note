@@ -180,7 +180,7 @@ private struct TitleField: View {
         ZStack(alignment: .topLeading) {
             // Always in the hierarchy so focus state is never lost on re-render
             TextField("", text: $title, axis: .vertical)
-                .font(.custom("Inter Tight", size: 26).weight(.medium))
+                .font(NoteFont.display)
                 .foregroundStyle(focused || title.isEmpty ? Color.noteInk : Color.clear)
                 .tint(Color.noteInk)
                 .focused($focused)
@@ -205,7 +205,7 @@ private struct TitleField: View {
 
         let t: Text = rest.isEmpty
             ? Text(last).font(NoteFont.italic(28))
-            : Text(rest + " ").font(.custom("Inter Tight", size: 26).weight(.medium))
+            : Text(rest + " ").font(NoteFont.display)
               + Text(last).font(NoteFont.italic(28))
 
         return t
@@ -258,7 +258,7 @@ private struct TagsRow: View {
     }
 
     private func commitTag() {
-        let trimmed = draft.trimmingCharacters(in: .whitespaces)
+        let trimmed = draft.trimmingCharacters(in: .whitespaces).lowercased()
         if !trimmed.isEmpty && !tags.contains(trimmed) {
             tags.append(trimmed)
         }
@@ -274,7 +274,7 @@ private struct BodyField: View {
 
     var body: some View {
         TextEditor(text: $text)
-            .font(.custom("Inter Tight", size: 15))
+            .font(Font.custom("Inter Tight", size: 15, relativeTo: .body))
             .foregroundStyle(Color.noteInk)
             .tint(Color.noteInk)
             .scrollContentBackground(.hidden)
@@ -332,13 +332,13 @@ private struct TodoRow: View {
                 onEdit()
             } label: {
                 Text(todo.done ? "▪" : "▢")
-                    .font(.custom("Inter Tight", size: 14))
+                    .font(NoteFont.body)
                     .foregroundStyle(todo.done ? Color.noteInkDim : Color.noteInkMute)
             }
             .buttonStyle(.plain)
 
             TextField("", text: $todo.text)
-                .font(.custom("Inter Tight", size: 14))
+                .font(NoteFont.body)
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)
@@ -425,4 +425,5 @@ private struct ToolBtn: View {
         EditorView(note: note)
     }
     .modelContainer(container)
+    .environmentObject(AppSettings.shared)
 }

@@ -45,7 +45,7 @@ private struct OnboardingWordmark: View {
                 .fill(Color.noteInk)
                 .frame(width: 8, height: 8)
             Text("NO.TE")
-                .font(Font.custom("Inter Tight", size: 12).weight(.semibold))
+                .font(Font.custom("Inter Tight", size: 12, relativeTo: .caption).weight(.semibold))
                 .tracking(0.8)
                 .foregroundStyle(Color.noteInk)
         }
@@ -128,11 +128,11 @@ private struct OnboardingProofRow: View {
 
             VStack(alignment: .leading, spacing: Space.xs) {
                 Text(point.title)
-                    .font(Font.custom("Inter Tight", size: 15).weight(.semibold))
+                    .font(Font.custom("Inter Tight", size: 15, relativeTo: .subheadline).weight(.semibold))
                     .foregroundStyle(Color.noteInk)
                     .minimumScaleFactor(0.9)
                 Text(point.body)
-                    .font(Font.custom("Inter Tight", size: 14))
+                    .font(NoteFont.body)
                     .foregroundStyle(Color.noteInkDim)
                     .minimumScaleFactor(0.9)
             }
@@ -186,7 +186,7 @@ struct SecondaryActionLink: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(Font.custom("Inter Tight", size: 12.5))
+                .font(Font.custom("Inter Tight", size: 12.5, relativeTo: .caption))
                 .foregroundStyle(Color.noteInkDim)
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 44)
@@ -201,7 +201,7 @@ struct SecondaryActionLink: View {
 struct PoweredByNostrFooter: View {
     var body: some View {
         Text("Built on Nostr.")
-            .font(Font.custom("Inter Tight", size: 12))
+            .font(NoteFont.caption)
             .foregroundStyle(Color.noteInkMute)
             .frame(maxWidth: .infinity)
             .multilineTextAlignment(.center)

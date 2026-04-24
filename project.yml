@@ -30,6 +30,7 @@ targets:
           UIImageName: LaunchLogo
           UIColorName: noteBg
         UIRequiresFullScreen: YES
+        NSFaceIDUsageDescription: "Reveal your secret key"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.smcnamara.note

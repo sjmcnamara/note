@@ -9,6 +9,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.5.0] — 2026-04-24
+
+### Added
+- Screen 5 — Settings: full implementation replacing stub
+- `IdentityCard` — conic-gradient avatar derived from npub, monospace-ellipsized npub with clipboard copy + haptic, nsec row with FaceID-gated reveal (auto-hides after 30 s), footer with "Back up now" link
+- `AppearancePicker` — three mini-preview tiles (Light / Night / System); active tile has 2pt ink border; selection stored in `@AppStorage("appearance")`
+- `SettingRows` — Text size (−/+ steps: Small / Default / Large, stored in `@AppStorage("textSizeStep")`), Tag suggestions toggle, Morning prompt toggle
+- `PrivateBackupCard` — shield icon, E2EE badge, enable toggle, body copy with *nsec* in Instrument Serif italic, relay row with halo dot + status, Add relay and Restore outline buttons
+- `FooterWordmark` — centered 10.5pt inkMute text at bottom of scroll
+- `ContentView` now reads `@AppStorage("appearance")` and applies `.preferredColorScheme()` globally; switching themes takes effect instantly
+- `NSFaceIDUsageDescription` added to `project.yml` / `Info.plist`
+
+### Changed
+- `NostrIdentity` protocol — added `var nsec: String { get }`
+- `MockIdentity` — added `let nsec` constant (clearly fake value)
+
+---
+
 ## [0.4.0] — 2026-04-24
 
 ### Added

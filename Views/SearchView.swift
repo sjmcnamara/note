@@ -79,7 +79,7 @@ private struct QueryBar: View {
 
             ZStack(alignment: .leading) {
                 TextField("", text: $query)
-                    .font(.custom("Inter Tight", size: 15))
+                    .font(Font.custom("Inter Tight", size: 15, relativeTo: .subheadline))
                     .foregroundStyle(Color.noteInk)
                     .tint(.clear)
                     .focused($focused)
@@ -88,7 +88,7 @@ private struct QueryBar: View {
                 // Invisible text mirror pushes caret to sit 2pt after last character
                 HStack(spacing: 0) {
                     Text(query)
-                        .font(.custom("Inter Tight", size: 15))
+                        .font(Font.custom("Inter Tight", size: 15, relativeTo: .subheadline))
                         .lineLimit(1)
                         .foregroundStyle(.clear)
                         .fixedSize(horizontal: true, vertical: false)

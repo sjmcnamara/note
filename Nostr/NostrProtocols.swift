@@ -2,6 +2,7 @@ import Foundation
 
 protocol NostrIdentity {
     var npub: String { get }
+    var nsec: String { get }
     func signEvent(_ event: UnsignedEvent) throws -> SignedEvent
 }
 

@@ -17,6 +17,7 @@ struct NOTEApp: App {
             if let container {
                 ContentView()
                     .modelContainer(container)
+                    .environmentObject(AppSettings.shared)
             } else {
                 Color.noteBg
                     .ignoresSafeArea()
