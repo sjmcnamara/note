@@ -302,31 +302,12 @@ private struct SettingRows: View {
                     .font(NoteFont.body)
                     .foregroundStyle(Color.noteInk)
                 Spacer()
-                HStack(spacing: Space.s) {
-                    Button {
-                        if textSizeStep > -1 { textSizeStep -= 1 }
-                    } label: {
-                        Image(systemName: "minus")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(textSizeStep > -1 ? Color.noteInkDim : Color.noteInkMute)
-                            .frame(width: 28, height: 28)
-                    }
-                    .buttonStyle(.plain)
-
+                HStack(spacing: Space.m) {
                     Text(textSizeLabel)
                         .font(NoteFont.captionS)
                         .foregroundStyle(Color.noteInkMute)
-                        .frame(width: 50, alignment: .center)
-
-                    Button {
-                        if textSizeStep < 1 { textSizeStep += 1 }
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(textSizeStep < 1 ? Color.noteInkDim : Color.noteInkMute)
-                            .frame(width: 28, height: 28)
-                    }
-                    .buttonStyle(.plain)
+                    Stepper("Text size", value: $textSizeStep, in: -1...1)
+                        .labelsHidden()
                 }
             }
 
