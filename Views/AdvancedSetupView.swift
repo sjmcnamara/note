@@ -113,17 +113,11 @@ private struct NavBar: View {
 
 private struct Hero: View {
     var body: some View {
-        (
-            Text("Bring your ")
-                .font(Font.custom("Inter Tight", size: 28, relativeTo: .largeTitle).weight(.medium))
-            + Text("own keys.")
-                .font(NoteFont.italic(32))
-        )
-        .foregroundStyle(Color.noteInk)
-        .lineSpacing(2)
-        .fixedSize(horizontal: false, vertical: true)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Bring your own keys.")
+        Text("Bring your own keys.")
+            .font(NoteFont.displayL)
+            .foregroundStyle(Color.noteInk)
+            .lineSpacing(2)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
