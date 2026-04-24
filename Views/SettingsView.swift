@@ -354,9 +354,13 @@ private struct SettingRows: View {
 
     private var textSizeLabel: String {
         switch settings.textSizeStep {
-        case ..<0: return "Small"
-        case 1...: return "Large"
-        default:   return "Default"
+        case -3: return "X-Small"
+        case -2: return "Smaller"
+        case -1: return "Small"
+        case  1: return "Large"
+        case  2: return "Larger"
+        case  3: return "X-Large"
+        default: return "Default"
         }
     }
 }

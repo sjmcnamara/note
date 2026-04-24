@@ -18,9 +18,9 @@ struct ContentView: View {
         case -3: return .xSmall
         case -2: return .small
         case -1: return .medium
-        case 1:  return .xLarge
-        case 2:  return .xxLarge
-        case 3:  return .xxxLarge
+        case  1: return .xLarge
+        case  2: return .xxLarge
+        case  3: return .xxxLarge
         default: return .large
         }
     }
