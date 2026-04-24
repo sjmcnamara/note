@@ -69,6 +69,9 @@ struct TimelineView: View {
             ZStack(alignment: .bottom) {
                 VStack(spacing: 0) {
                     TimelineHeader(showSearch: $showSearch)
+                    Text("DEBUG step=\(settings.textSizeStep)")
+                        .foregroundStyle(.red)
+                        .font(.system(size: 20, weight: .bold))
                     TagStrip(tags: tags, activeTag: $activeTag)
 
                     ScrollView {
@@ -273,7 +276,7 @@ private struct NoteRow: View {
 
                 if !note.body.isEmpty {
                     Text(note.body)
-                        .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep)))
+                        .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep) * 8))
                         .foregroundStyle(Color.noteInkDim)
                         .lineLimit(2)
                 }
