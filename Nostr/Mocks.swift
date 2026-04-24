@@ -1,25 +1,6 @@
 import Foundation
 import Observation
 
-struct MockIdentity: NostrIdentity {
-    let npub = "npub1mock00000000000000000000000000000000000000000000000000000000"
-    let nsec = "nsec1mock00000000000000000000000000000000000000000000000000000000"
-
-    static func generate() -> MockIdentity { MockIdentity() }
-
-    func signEvent(_ event: UnsignedEvent) throws -> SignedEvent {
-        SignedEvent(
-            id: UUID().uuidString.lowercased().replacingOccurrences(of: "-", with: ""),
-            pubkey: npub,
-            createdAt: event.createdAt,
-            kind: event.kind,
-            tags: event.tags,
-            content: event.content,
-            sig: "mocksig\(UUID().uuidString.lowercased().replacingOccurrences(of: "-", with: ""))"
-        )
-    }
-}
-
 @Observable
 final class MockBackup: NostrBackup {
     var status: BackupStatus = .disabled
@@ -33,4 +14,14 @@ final class MockBackup: NostrBackup {
     func restore(since: Date?) async throws -> [Note] {
         []
     }
+}
+
+// MARK: - Preview helpers
+
+extension NostrIdentity {
+    /// Fake identity for SwiftUI previews. Never used at runtime.
+    static let preview = NostrIdentity(
+        npub: "npub1preview0000000000000000000000000000000000000000000000000000",
+        publicKeyHex: "preview00000000000000000000000000000000000000000000000000000000"
+    )
 }

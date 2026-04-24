@@ -71,6 +71,16 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Recommended variant on Generate: 1.5pt `noteInk` border + `recommended` badge
 - Onboarding gains secondary "Advanced setup" link → sheet-presents `AdvancedSetupView` in its own NavigationStack
 
+### [0.7.0] Real Nostr identity
+- First non-UI release. Adds `rust-nostr/nostr-sdk-swift` (`from: 0.44.2`) as SPM dep
+- `IdentityService` (`@MainActor ObservableObject`) — auto-generates on first launch, parses stored nsec thereafter. Rust FFI runs off main on cold start
+- `KeychainService` + `SecureStorage` protocol (ported from whistle, trimmed) — nsec stored Keychain-only, `kSecAttrAccessibleWhenUnlocked`
+- `NostrIdentity` turned from protocol into public struct (npub + publicKeyHex). nsec never on the identity object
+- Advanced setup → Generate now actually mints a fresh keypair and overwrites the Keychain entry
+- Settings → Advanced → nsec Reveal reads real bech32 nsec from Keychain after FaceID, auto-hides after 30 s
+- Removed: `MockIdentity`, `UnsignedEvent`, `SignedEvent`, unused `signEvent(_:)`
+- Open: regenerate confirm dialog, bech32 validator + tests (Screen 7)
+
 ---
 
 ## Up next

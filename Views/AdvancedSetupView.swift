@@ -4,8 +4,10 @@ import SwiftUI
 
 struct AdvancedSetupView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var identityService: IdentityService
     @State private var showImport = false
     @State private var toastMessage: String?
+    @State private var busy = false
     var onComplete: (() -> Void)?
 
     var body: some View {
@@ -59,12 +61,17 @@ struct AdvancedSetupView: View {
     }
 
     private func generate() {
-        _ = MockIdentity.generate()
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
-        if let onComplete {
-            onComplete()
-        } else {
-            dismiss()
+        guard !busy else { return }
+        busy = true
+        Task {
+            await identityService.regenerate()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            busy = false
+            if let onComplete {
+                onComplete()
+            } else {
+                dismiss()
+            }
         }
     }
 
@@ -231,4 +238,5 @@ private struct Toast: View {
     NavigationStack {
         AdvancedSetupView()
     }
+    .environmentObject(IdentityService(storage: InMemorySecureStorage()))
 }

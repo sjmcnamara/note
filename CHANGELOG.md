@@ -9,6 +9,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.0] — 2026-04-24
+
+### Added
+- **Real Nostr identity.** First non-UI release. Replaces `MockIdentity` with a real keypair generated via [`rust-nostr/nostr-sdk-swift`](https://github.com/rust-nostr/nostr-sdk-swift) (pinned `from: 0.44.2`).
+- `IdentityService` — `@MainActor ObservableObject` that auto-generates a keypair on first launch (Rust FFI runs off main to keep the splash responsive), parses the stored nsec on subsequent launches, and exposes `regenerate()`, `importKey(nsec:)`, and `exportNsec()` for user-initiated flows. Injected app-wide via `@EnvironmentObject`.
+- `KeychainService` + `SecureStorage` protocol ported (trimmed) from `whistle`. nsec stored with `kSecAttrAccessibleWhenUnlocked`, Keychain-only (no UserDefaults fallback). `InMemorySecureStorage` included for previews/tests.
+- Advanced setup → Generate now actually destroys the current key and mints a new pair (via `IdentityService.regenerate()`), success haptic, dismiss.
+- Settings → Advanced → nsec Reveal reads the real bech32 nsec from Keychain via `IdentityService.exportNsec()` after FaceID challenge; auto-hides after 30 s as before.
+
+### Changed
+- `NostrIdentity` converted from protocol to public struct (`npub` + `publicKeyHex` only). The secret key never appears on the identity object — it lives only in Keychain.
+- `UnsignedEvent` / `SignedEvent` / `signEvent(_:)` removed. Event signing will come from `nostr-sdk-swift`'s `Keys` when we publish.
+- `MockIdentity` removed. Previews use `NostrIdentity.preview` or `IdentityService(storage: InMemorySecureStorage())`.
+- Onboarding "Start writing" no longer calls a mock generator — identity is created at app init.
+- README stack line updated; `MARKETING_VERSION` 0.7.0, `CURRENT_PROJECT_VERSION` 4.
+
+### Notes
+- Regenerating keys from Settings is destructive and currently one-tap — a confirm dialog is worth a follow-up.
+- Bech32 validator + tests still land with Screen 7 (Key import).
+
+---
+
 ## [0.6.0] — 2026-04-24
 
 ### Added

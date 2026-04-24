@@ -6,6 +6,11 @@ options:
   createIntermediateGroups: true
   defaultConfig: Debug
 
+packages:
+  NostrSDK:
+    url: https://github.com/rust-nostr/nostr-sdk-swift
+    from: "0.44.2"
+
 targets:
   NOTE:
     type: application
@@ -17,6 +22,8 @@ targets:
       - Nostr
       - Assets.xcassets
       - Fonts
+    dependencies:
+      - package: NostrSDK
     info:
       path: Info.plist
       properties:
@@ -38,8 +45,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.smcnamara.note
         DEVELOPMENT_TEAM: 3V55494FNM
         SWIFT_VERSION: 5.9
-        MARKETING_VERSION: 0.6.0
-        CURRENT_PROJECT_VERSION: 3
+        MARKETING_VERSION: 0.7.0
+        CURRENT_PROJECT_VERSION: 4
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_LANDSCAPE_ORIENTATION_IPAD: NO
         INFOPLIST_KEY_UIRequiresFullScreen: YES

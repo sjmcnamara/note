@@ -50,7 +50,7 @@ struct OnboardingView: View {
     }
 
     private func generateAndEnter() {
-        _ = MockIdentity.generate()
+        // Identity is already generated on app init via IdentityService.
         onComplete()
     }
 }

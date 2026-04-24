@@ -4,7 +4,7 @@ import LocalAuthentication
 // MARK: - AdvancedSettingsView
 
 struct AdvancedSettingsView: View {
-    var identity: any NostrIdentity = MockIdentity()
+    @EnvironmentObject private var identityService: IdentityService
     var backup: MockBackup = MockBackup()
     @State private var revealNsec = false
 
@@ -12,7 +12,9 @@ struct AdvancedSettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.sectionGap) {
                 AdvancedNavBar()
-                IdentityCard(identity: identity, revealNsec: $revealNsec)
+                if let identity = identityService.identity {
+                    IdentityCard(identity: identity, revealNsec: $revealNsec)
+                }
                 PrivateBackupCard(backup: backup)
                 KeyActionsCard()
             }
@@ -56,16 +58,12 @@ private struct AdvancedNavBar: View {
 // MARK: - Identity card
 
 private struct IdentityCard: View {
-    let identity: any NostrIdentity
+    let identity: NostrIdentity
     @Binding var revealNsec: Bool
+    @EnvironmentObject private var identityService: IdentityService
     @State private var hideTask: Task<Void, Never>?
     @State private var copyConfirmed = false
-
-    private var shortNpub: String {
-        let n = identity.npub
-        guard n.count > 16 else { return n }
-        return String(n.prefix(12)) + "…" + String(n.suffix(4))
-    }
+    @State private var revealedNsec: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.l) {
@@ -77,7 +75,7 @@ private struct IdentityCard: View {
                     .foregroundStyle(Color.noteInkMute)
 
                 HStack(spacing: Space.m) {
-                    Text(shortNpub)
+                    Text(identity.shortNpub)
                         .font(.system(.caption, design: .monospaced))
                         .foregroundStyle(Color.noteInkDim)
                         .lineLimit(1)
@@ -114,8 +112,8 @@ private struct IdentityCard: View {
                         .foregroundStyle(Color.noteInkMute)
 
                     Group {
-                        if revealNsec {
-                            Text(identity.nsec)
+                        if revealNsec, let revealedNsec {
+                            Text(revealedNsec)
                                 .font(.system(.caption2, design: .monospaced))
                                 .foregroundStyle(Color.noteInk)
                         } else {
@@ -130,7 +128,10 @@ private struct IdentityCard: View {
                     Button {
                         if revealNsec {
                             hideTask?.cancel()
-                            withAnimation { revealNsec = false }
+                            withAnimation {
+                                revealNsec = false
+                                revealedNsec = nil
+                            }
                         } else {
                             authenticate()
                         }
@@ -162,18 +163,23 @@ private struct IdentityCard: View {
         let ctx = LAContext()
         var err: NSError?
         guard ctx.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &err) else {
-            withAnimation { revealNsec = true }
-            scheduleHide()
+            reveal()
             return
         }
         ctx.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
                            localizedReason: "Reveal your secret key") { ok, _ in
             guard ok else { return }
-            DispatchQueue.main.async {
-                withAnimation { revealNsec = true }
-                scheduleHide()
-            }
+            DispatchQueue.main.async { reveal() }
         }
+    }
+
+    private func reveal() {
+        guard let nsec = identityService.exportNsec() else { return }
+        withAnimation {
+            revealedNsec = nsec
+            revealNsec = true
+        }
+        scheduleHide()
     }
 
     private func scheduleHide() {
@@ -181,7 +187,12 @@ private struct IdentityCard: View {
         hideTask = Task {
             try? await Task.sleep(for: .seconds(30))
             guard !Task.isCancelled else { return }
-            await MainActor.run { withAnimation { revealNsec = false } }
+            await MainActor.run {
+                withAnimation {
+                    revealNsec = false
+                    revealedNsec = nil
+                }
+            }
         }
     }
 }
@@ -402,4 +413,5 @@ private struct KeyActionsCard: View {
     NavigationStack {
         AdvancedSettingsView()
     }
+    .environmentObject(IdentityService(storage: InMemorySecureStorage()))
 }
