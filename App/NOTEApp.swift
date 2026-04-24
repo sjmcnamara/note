@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct NOTEApp: App {
@@ -12,5 +13,6 @@ struct NOTEApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: Note.self)
     }
 }

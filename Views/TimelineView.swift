@@ -1,59 +1,5 @@
 import SwiftUI
-
-// MARK: - Seed data (replaced by SwiftData query in a later PR)
-
-private extension Note {
-    static let seeds: [Note] = {
-        let cal = Calendar.current
-        let now = Date()
-
-        func ago(_ days: Int, h: Int, m: Int) -> Date {
-            let base = cal.date(byAdding: .day, value: -days, to: now)!
-            return cal.date(bySettingHour: h, minute: m, second: 0, of: base)!
-        }
-
-        return [
-            Note(title: "Thursday standup",
-                 body: "Short week. Focus on shipping the onboarding flow — S is unblocked on pricing once copy lands.",
-                 tags: ["work"],
-                 todos: [
-                     TodoItem(text: "Finalize launch copy w/ M"),
-                     TodoItem(text: "Rev pricing tiers — send to S"),
-                     TodoItem(text: "Cancel 2pm", done: true),
-                     TodoItem(text: "Ship onboarding by Fri"),
-                 ],
-                 createdAt: ago(0, h: 9, m: 12), updatedAt: ago(0, h: 9, m: 12)),
-            Note(title: "",
-                 body: "Mom — Sunday 4pm. Bring pie.",
-                 tags: ["daily"],
-                 createdAt: ago(0, h: 7, m: 44), updatedAt: ago(0, h: 7, m: 44)),
-            Note(title: "Train dream, again.",
-                 body: "",
-                 tags: ["dreams"],
-                 createdAt: ago(0, h: 7, m: 2), updatedAt: ago(0, h: 7, m: 2)),
-            Note(title: "",
-                 body: "Book idea: quiet tools, loud results.",
-                 tags: ["ideas"],
-                 createdAt: ago(1, h: 18, m: 40), updatedAt: ago(1, h: 18, m: 40)),
-            Note(title: "Reading list",
-                 body: "Four Thousand Weeks. How to Take Smart Notes. Thinking, Fast and Slow.",
-                 tags: ["reading"],
-                 createdAt: ago(1, h: 12, m: 15), updatedAt: ago(1, h: 12, m: 15)),
-            Note(title: "",
-                 body: "Notice how a good idea arrives sideways.",
-                 tags: ["daily"],
-                 createdAt: ago(1, h: 8, m: 30), updatedAt: ago(1, h: 8, m: 30)),
-            Note(title: "Q3 retro notes",
-                 body: "Shipped fast but skipped docs. Fix the docs habit first.",
-                 tags: ["work"],
-                 createdAt: ago(3, h: 16, m: 5), updatedAt: ago(3, h: 16, m: 5)),
-            Note(title: "",
-                 body: "Clarity comes after the walk, not before.",
-                 tags: ["ideas"],
-                 createdAt: ago(5, h: 9, m: 20), updatedAt: ago(5, h: 9, m: 20)),
-        ]
-    }()
-}
+import SwiftData
 
 // MARK: - Grouping
 
@@ -92,9 +38,11 @@ private func makeGroups(_ notes: [Note]) -> [DayGroup] {
 // MARK: - TimelineView
 
 struct TimelineView: View {
-    @State private var notes: [Note] = Note.seeds
+    @Query(sort: \Note.createdAt, order: .reverse) private var notes: [Note]
+    @Environment(\.modelContext) private var modelContext
     @State private var activeTag: String? = nil
     @State private var showSearch = false
+    @State private var composeNote: Note?
 
     private let defaultTags = ["work", "daily", "ideas", "reading", "dreams"]
 
@@ -109,12 +57,10 @@ struct TimelineView: View {
         return notes.filter { $0.tags.contains(t) }
     }
 
-    private func handleSave(_ updated: Note) {
-        if let idx = notes.firstIndex(where: { $0.id == updated.id }) {
-            notes[idx] = updated
-        } else if !updated.title.isEmpty || !updated.body.isEmpty || !updated.todos.isEmpty {
-            notes.insert(updated, at: 0)
-        }
+    private func createNote() {
+        let note = Note(title: "", body: "", tags: [])
+        modelContext.insert(note)
+        composeNote = note
     }
 
     var body: some View {
@@ -127,19 +73,22 @@ struct TimelineView: View {
                     ScrollView {
                         LazyVStack(spacing: 0) {
                             ForEach(makeGroups(filtered)) { group in
-                                DaySection(group: group, onSave: handleSave)
+                                DaySection(group: group)
                             }
                         }
                         .padding(.bottom, 96)
                     }
                 }
 
-                TimelineComposeBar(onSave: handleSave)
+                TimelineComposeBar(onCreate: createNote)
                     .padding(.horizontal, Space.gutterH)
                     .padding(.bottom, 24)
             }
             .background(Color.noteBg.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(item: $composeNote) { note in
+                EditorView(note: note, isNew: true)
+            }
             .overlay {
                 if showSearch {
                     SearchView(notes: notes, onDismiss: {
@@ -261,7 +210,6 @@ private struct TagChip: View {
 
 private struct DaySection: View {
     let group: DayGroup
-    let onSave: (Note) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -283,7 +231,7 @@ private struct DaySection: View {
                             .frame(height: 1)
                             .padding(.leading, Space.gutterH)
                     }
-                    NavigationLink { EditorView(note: note, onSave: onSave) } label: {
+                    NavigationLink { EditorView(note: note) } label: {
                         NoteRow(note: note)
                     }
                     .buttonStyle(.plain)
@@ -356,7 +304,7 @@ private struct NoteRow: View {
 // MARK: - Compose bar
 
 private struct TimelineComposeBar: View {
-    let onSave: (Note) -> Void
+    let onCreate: () -> Void
 
     var body: some View {
         HStack(spacing: 0) {
@@ -371,15 +319,14 @@ private struct TimelineComposeBar: View {
                 .foregroundStyle(Color.noteInkDim)
                 .frame(width: 36, height: 36)
 
-            NavigationLink {
-                EditorView(note: Note(title: "", body: "", tags: [], createdAt: Date(), updatedAt: Date()), onSave: onSave)
-            } label: {
+            Button(action: onCreate) {
                 Image(systemName: "plus")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(Color.noteBg)
                     .frame(width: 36, height: 36)
                     .background(Color.noteInk, in: Circle())
             }
+            .buttonStyle(.plain)
             .padding(.trailing, Space.m)
         }
         .frame(height: 54)
@@ -396,4 +343,5 @@ private struct TimelineComposeBar: View {
 
 #Preview {
     TimelineView()
+        .modelContainer(for: Note.self, inMemory: true)
 }

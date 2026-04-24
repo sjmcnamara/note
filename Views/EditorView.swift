@@ -1,21 +1,22 @@
 import SwiftUI
+import SwiftData
 
 // MARK: - EditorView
 
 struct EditorView: View {
-    @State private var note: Note
+    @Bindable var note: Note
+    var isNew: Bool = false
     @State private var saving = false
     @State private var saveTask: Task<Void, Never>?
     @Environment(\.dismiss) private var dismiss
-    let onSave: (Note) -> Void
-
-    init(note: Note, onSave: @escaping (Note) -> Void) {
-        _note = State(initialValue: note)
-        self.onSave = onSave
-    }
+    @Environment(\.modelContext) private var modelContext
 
     private var wordCount: Int {
         note.body.split { $0.isWhitespace }.count
+    }
+
+    private var isEmpty: Bool {
+        note.title.isEmpty && note.body.isEmpty && note.todos.isEmpty
     }
 
     var body: some View {
@@ -29,7 +30,7 @@ struct EditorView: View {
                     TagsRow(tags: $note.tags)
                     BodyField(text: $note.body)
                     if !note.todos.isEmpty {
-                        TodoSection(todos: $note.todos)
+                        TodoSection(note: note, onEdit: markEdited)
                     }
                 }
                 .padding(.horizontal, 26)
@@ -47,11 +48,16 @@ struct EditorView: View {
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .onChange(of: note.title)             { _, _ in markEdited() }
-        .onChange(of: note.body)              { _, _ in markEdited() }
-        .onChange(of: note.todos.map(\.done)) { _, _ in markEdited() }
-        .onChange(of: note.todos.map(\.text)) { _, _ in markEdited() }
-        .onDisappear { onSave(note) }
+        .onChange(of: note.title) { _, _ in markEdited() }
+        .onChange(of: note.body)  { _, _ in markEdited() }
+        .onDisappear {
+            saveTask?.cancel()
+            if isNew && isEmpty {
+                modelContext.delete(note)
+            } else {
+                try? modelContext.save()
+            }
+        }
     }
 
     private func markEdited() {
@@ -66,7 +72,7 @@ struct EditorView: View {
             try? await Task.sleep(for: .milliseconds(400))
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                onSave(note)
+                try? modelContext.save()
                 withAnimation(.spring(duration: 0.4)) { saving = false }
             }
         }
@@ -77,7 +83,10 @@ struct EditorView: View {
     }
 
     private func addTodo() {
-        note.todos.append(TodoItem(text: ""))
+        let item = TodoItem(text: "")
+        modelContext.insert(item)
+        note.todos.append(item)
+        markEdited()
     }
 }
 
@@ -231,7 +240,7 @@ private struct BodyField: View {
             .foregroundStyle(Color.noteInk)
             .tint(Color.noteInk)
             .scrollContentBackground(.hidden)
-            .lineSpacing(9) // ~1.6 line height on 15pt font
+            .lineSpacing(9)
             .frame(minHeight: 120)
             .textContentType(.none)
             .padding(.bottom, Space.sectionGap)
@@ -241,7 +250,8 @@ private struct BodyField: View {
 // MARK: - Todo section
 
 private struct TodoSection: View {
-    @Binding var todos: [TodoItem]
+    @Bindable var note: Note
+    let onEdit: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -250,8 +260,8 @@ private struct TodoSection: View {
                 .foregroundStyle(Color.noteInkMute)
                 .padding(.bottom, Space.m)
 
-            ForEach($todos) { $todo in
-                TodoRow(todo: $todo)
+            ForEach($note.todos) { $todo in
+                TodoRow(todo: $todo, onEdit: onEdit)
             }
         }
         .padding(.top, Space.sectionGap)
@@ -260,10 +270,14 @@ private struct TodoSection: View {
 
 private struct TodoRow: View {
     @Binding var todo: TodoItem
+    let onEdit: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: Space.m) {
-            Button { todo.done.toggle() } label: {
+            Button {
+                todo.done.toggle()
+                onEdit()
+            } label: {
                 Text(todo.done ? "▪" : "▢")
                     .font(.custom("Inter Tight", size: 14))
                     .foregroundStyle(todo.done ? Color.noteInkDim : Color.noteInkMute)
@@ -275,6 +289,7 @@ private struct TodoRow: View {
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)
+                .onChange(of: todo.text) { _, _ in onEdit() }
         }
         .padding(.vertical, 3)
     }
@@ -332,20 +347,22 @@ private struct ToolBtn: View {
 // MARK: - Preview
 
 #Preview {
-    NavigationStack {
-        EditorView(note: Note(
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Note.self, configurations: config)
+    let note = Note(
+        title: "Thursday standup",
+        body: "Short week. Focus on shipping the onboarding flow.",
+        tags: ["work", "launch"],
+        todos: [
+            TodoItem(text: "Finalize launch copy w/ M"),
+            TodoItem(text: "Rev pricing tiers — send to S"),
+            TodoItem(text: "Cancel 2pm", done: true),
+        ]
+    )
+    container.mainContext.insert(note)
 
-            title: "Thursday standup",
-            body: "Short week. Focus on shipping the onboarding flow — S is unblocked on pricing once copy lands.",
-            tags: ["work", "launch"],
-            todos: [
-                TodoItem(text: "Finalize launch copy w/ M"),
-                TodoItem(text: "Rev pricing tiers — send to S"),
-                TodoItem(text: "Cancel 2pm", done: true),
-                TodoItem(text: "Ship onboarding by Fri"),
-            ],
-            createdAt: Date(),
-            updatedAt: Date()
-        ), onSave: { _ in })
+    return NavigationStack {
+        EditorView(note: note)
     }
+    .modelContainer(container)
 }
