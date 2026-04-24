@@ -30,7 +30,7 @@ struct EditorView: View {
                     TagsRow(tags: $note.tags)
                     BodyField(text: $note.body)
                     if !note.todos.isEmpty {
-                        TodoSection(note: note, onEdit: markEdited)
+                        TodoSection(note: note, onEdit: markEdited, onAddTodo: addTodo)
                     }
                 }
                 .padding(.horizontal, 26)
@@ -42,8 +42,7 @@ struct EditorView: View {
                 wordCount: wordCount,
                 onHeading: { insert("## ") },
                 onList:    { insert("- ") },
-                onTodo:    { addTodo() },
-                onImage:   {}
+                onTodo:    { addTodo() }
             )
         }
         .background(Color.noteBg.ignoresSafeArea())
@@ -170,26 +169,27 @@ private struct TitleField: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        Group {
-            if focused || title.isEmpty {
-                TextField("", text: $title, axis: .vertical)
-                    .font(.custom("Inter Tight", size: 26).weight(.medium))
-                    .foregroundStyle(Color.noteInk)
-                    .tint(Color.noteInk)
-                    .focused($focused)
-                    .lineLimit(1...6)
-                    .textContentType(.none)
-                    .onAppear { if title.isEmpty { focused = true } }
-            } else {
-                styledTitle
-                    .onTapGesture { focused = true }
+        ZStack(alignment: .topLeading) {
+            // Always in the hierarchy so focus state is never lost on re-render
+            TextField("", text: $title, axis: .vertical)
+                .font(.custom("Inter Tight", size: 26).weight(.medium))
+                .foregroundStyle(focused || title.isEmpty ? Color.noteInk : Color.clear)
+                .tint(Color.noteInk)
+                .focused($focused)
+                .lineLimit(1...6)
+                .textContentType(.none)
+                .onAppear { if title.isEmpty { focused = true } }
+
+            // Decorative overlay — non-interactive so taps fall through to the TextField
+            if !focused && !title.isEmpty {
+                styledTitle.allowsHitTesting(false)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, Space.l)
     }
 
-    // Last word rendered in Instrument Serif italic at 28pt; rest in Inter Tight 26/500
+    // Last word in Instrument Serif italic; rest in Inter Tight 26/500
     private var styledTitle: some View {
         let words = title.components(separatedBy: " ")
         let last  = words.last ?? ""
@@ -210,6 +210,9 @@ private struct TitleField: View {
 
 private struct TagsRow: View {
     @Binding var tags: [String]
+    @State private var addingTag = false
+    @State private var draft = ""
+    @FocusState private var tagFieldFocused: Bool
 
     var body: some View {
         HStack(spacing: Space.base) {
@@ -218,14 +221,41 @@ private struct TagsRow: View {
                     .font(NoteFont.caption)
                     .foregroundStyle(Color.noteInkDim)
             }
-            Button(action: {}) {
-                Text("+")
+
+            if addingTag {
+                TextField("tag", text: $draft)
                     .font(NoteFont.caption)
-                    .foregroundStyle(Color.noteInkMute)
+                    .foregroundStyle(Color.noteInkDim)
+                    .tint(Color.noteInk)
+                    .focused($tagFieldFocused)
+                    .frame(minWidth: 48)
+                    .onSubmit { commitTag() }
+                    .onAppear { tagFieldFocused = true }
+            } else {
+                Button {
+                    draft = ""
+                    addingTag = true
+                } label: {
+                    Text("+")
+                        .font(NoteFont.caption)
+                        .foregroundStyle(Color.noteInkMute)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(.bottom, Space.sectionGap)
+        .onChange(of: tagFieldFocused) { _, focused in
+            if !focused { commitTag() }
+        }
+    }
+
+    private func commitTag() {
+        let trimmed = draft.trimmingCharacters(in: .whitespaces)
+        if !trimmed.isEmpty && !tags.contains(trimmed) {
+            tags.append(trimmed)
+        }
+        draft = ""
+        addingTag = false
     }
 }
 
@@ -252,6 +282,8 @@ private struct BodyField: View {
 private struct TodoSection: View {
     @Bindable var note: Note
     let onEdit: () -> Void
+    let onAddTodo: () -> Void
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -261,7 +293,18 @@ private struct TodoSection: View {
                 .padding(.bottom, Space.m)
 
             ForEach($note.todos) { $todo in
-                TodoRow(todo: $todo, onEdit: onEdit)
+                TodoRow(
+                    todo: $todo,
+                    onEdit: onEdit,
+                    onReturn: onAddTodo,
+                    onDelete: {
+                        if let idx = note.todos.firstIndex(where: { $0.id == todo.id }) {
+                            modelContext.delete(note.todos[idx])
+                            note.todos.remove(at: idx)
+                            onEdit()
+                        }
+                    }
+                )
             }
         }
         .padding(.top, Space.sectionGap)
@@ -271,6 +314,8 @@ private struct TodoSection: View {
 private struct TodoRow: View {
     @Binding var todo: TodoItem
     let onEdit: () -> Void
+    let onReturn: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: Space.m) {
@@ -290,6 +335,15 @@ private struct TodoRow: View {
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)
                 .onChange(of: todo.text) { _, _ in onEdit() }
+                .onSubmit { onReturn() }
+
+            Button(action: onDelete) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(Color.noteInkMute)
+                    .frame(width: 20, height: 20)
+            }
+            .buttonStyle(.plain)
         }
         .padding(.vertical, 3)
     }
@@ -302,7 +356,6 @@ private struct EditorToolBar: View {
     let onHeading: () -> Void
     let onList:    () -> Void
     let onTodo:    () -> Void
-    let onImage:   () -> Void
 
     var body: some View {
         HStack {
@@ -313,10 +366,9 @@ private struct EditorToolBar: View {
             Spacer()
 
             HStack(spacing: Space.xs) {
-                ToolBtn(systemName: "textformat",    action: onHeading)
-                ToolBtn(systemName: "list.bullet",   action: onList)
+                ToolBtn(systemName: "textformat",       action: onHeading)
+                ToolBtn(systemName: "list.bullet",      action: onList)
                 ToolBtn(systemName: "checkmark.square", action: onTodo)
-                ToolBtn(systemName: "photo",         action: onImage)
             }
             .padding(.horizontal, Space.m)
             .padding(.vertical, Space.s)
