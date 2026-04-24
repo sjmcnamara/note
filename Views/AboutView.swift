@@ -33,7 +33,7 @@ struct AboutView: View {
                     infoRow(label: "Build",   value: build)
                 }
 
-                Text("Powered by Nostr · open protocol")
+                Text("Built on Nostr. An open protocol.")
                     .font(NoteFont.captionS)
                     .foregroundStyle(Color.noteInkMute)
                     .frame(maxWidth: .infinity, alignment: .center)

@@ -48,6 +48,11 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - `NostrIdentity` protocol and `MockIdentity` extended with `nsec`
 - `NSFaceIDUsageDescription` added to project
 
+### [0.5.2] Swipe-to-delete + copy tweaks
+- Timeline rows now support swipe-to-delete via `List` + `.swipeActions` (allowsFullSwipe). Replaces `LazyVStack` with a styled plain `List` keeping row background, separator tint, and leading inset consistent with the previous design.
+- Nostr credit copy unified across Onboarding and About to "Built on Nostr. An open protocol."
+- Version bumped to 0.5.2 / build 2.
+
 ### [0.5.1] Settings restructure — Basic / Advanced / About
 - `SettingsView` slimmed to Basic: Appearance picker, Text size slider (7 unique-labelled steps), two nav rows (About, Advanced)
 - `AboutView` new: version + build from `Bundle.main`, NO.TE wordmark, "Powered by Nostr" credit
