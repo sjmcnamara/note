@@ -11,6 +11,7 @@ struct EditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
+    @EnvironmentObject private var settings: AppSettings
 
     private var wordCount: Int {
         note.body.split { $0.isWhitespace }.count
@@ -29,9 +30,9 @@ struct EditorView: View {
                     EditorTimestamp(date: note.createdAt)
                     TitleField(title: $note.title)
                     TagsRow(tags: $note.tags)
-                    BodyField(text: $note.body)
+                    BodyField(text: $note.body, textSizeStep: settings.textSizeStep)
                     if !note.todos.isEmpty {
-                        TodoSection(note: note, onEdit: markEdited, onAddTodo: addTodo)
+                        TodoSection(note: note, textSizeStep: settings.textSizeStep, onEdit: markEdited, onAddTodo: addTodo)
                     }
                 }
                 .padding(.horizontal, 26)
@@ -271,11 +272,11 @@ private struct TagsRow: View {
 
 private struct BodyField: View {
     @Binding var text: String
-    @EnvironmentObject private var settings: AppSettings
+    let textSizeStep: Int
 
     var body: some View {
         TextEditor(text: $text)
-            .font(.custom("Inter Tight", size: 15 + CGFloat(settings.textSizeStep)))
+            .font(.custom("Inter Tight", size: 15 + CGFloat(textSizeStep)))
             .foregroundStyle(Color.noteInk)
             .tint(Color.noteInk)
             .scrollContentBackground(.hidden)
@@ -283,7 +284,7 @@ private struct BodyField: View {
             .frame(minHeight: 120)
             .textContentType(.none)
             .padding(.bottom, Space.sectionGap)
-            .id(settings.textSizeStep)
+            .id(textSizeStep)
     }
 }
 
@@ -291,6 +292,7 @@ private struct BodyField: View {
 
 private struct TodoSection: View {
     @Bindable var note: Note
+    let textSizeStep: Int
     let onEdit: () -> Void
     let onAddTodo: () -> Void
     @Environment(\.modelContext) private var modelContext
@@ -305,6 +307,7 @@ private struct TodoSection: View {
             ForEach($note.todos) { $todo in
                 TodoRow(
                     todo: $todo,
+                    textSizeStep: textSizeStep,
                     onEdit: onEdit,
                     onReturn: onAddTodo,
                     onDelete: {
@@ -323,10 +326,10 @@ private struct TodoSection: View {
 
 private struct TodoRow: View {
     @Binding var todo: TodoItem
+    let textSizeStep: Int
     let onEdit: () -> Void
     let onReturn: () -> Void
     let onDelete: () -> Void
-    @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
         HStack(alignment: .center, spacing: Space.m) {
@@ -335,13 +338,13 @@ private struct TodoRow: View {
                 onEdit()
             } label: {
                 Text(todo.done ? "▪" : "▢")
-                    .font(.custom("Inter Tight", size: 14 + CGFloat(settings.textSizeStep)))
+                    .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep)))
                     .foregroundStyle(todo.done ? Color.noteInkDim : Color.noteInkMute)
             }
             .buttonStyle(.plain)
 
             TextField("", text: $todo.text)
-                .font(.custom("Inter Tight", size: 14 + CGFloat(settings.textSizeStep)))
+                .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep)))
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)
