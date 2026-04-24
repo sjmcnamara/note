@@ -48,6 +48,14 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - `NostrIdentity` protocol and `MockIdentity` extended with `nsec`
 - `NSFaceIDUsageDescription` added to project
 
+### [0.5.1] Settings restructure — Basic / Advanced / About
+- `SettingsView` slimmed to Basic: Appearance picker, Text size slider (7 unique-labelled steps), two nav rows (About, Advanced)
+- `AboutView` new: version + build from `Bundle.main`, NO.TE wordmark, "Powered by Nostr" credit
+- `AdvancedSettingsView` new: Identity card, Private Backup card, Change keys / Restore rows (link to `AdvancedSetupView`)
+- All `NoteFont` tokens now use `relativeTo:` and the app applies `.dynamicTypeSize(...)` at `ContentView`, so every text element scales with the slider
+- Dropped `Tag suggestions` and `Morning prompt` toggles (no design, no implementation)
+- `MARKETING_VERSION` + `CURRENT_PROJECT_VERSION` added to `project.yml`
+
 ---
 
 ## Up next

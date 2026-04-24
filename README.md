@@ -1,6 +1,6 @@
 # NO.TE
 
-**Status:** v0.2.0 — Timeline
+**Status:** v0.5.1 — Settings (Basic / Advanced / About)
 
 A private, local-first note app for iPhone. Notes stay on your device. Nostr provides identity and optional encrypted backup — nothing is shared unless you ask for it.
 
