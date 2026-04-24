@@ -104,7 +104,7 @@ private struct IdentityCard: View {
             }
 
             VStack(alignment: .leading, spacing: Space.xs) {
-                Text("nsec · hidden")
+                Text("nsec")
                     .font(NoteFont.captionS)
                     .foregroundStyle(Color.noteInkMute)
 
