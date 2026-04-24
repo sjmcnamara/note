@@ -43,6 +43,7 @@ struct TimelineView: View {
     @State private var activeTag: String? = nil
     @State private var showSearch = false
     @State private var composeNote: Note?
+    @State private var editingNote: Note?
 
     private let defaultTags = ["work", "daily", "ideas", "reading", "dreams"]
 
@@ -96,6 +97,9 @@ struct TimelineView: View {
             .navigationDestination(item: $composeNote) { note in
                 EditorView(note: note, isNew: true)
             }
+            .navigationDestination(item: $editingNote) { note in
+                EditorView(note: note)
+            }
             .overlay {
                 if showSearch {
                     SearchView(notes: notes, onDismiss: {
@@ -125,9 +129,10 @@ struct TimelineView: View {
 
     @ViewBuilder
     private func noteRow(_ note: Note) -> some View {
-        NavigationLink { EditorView(note: note) } label: {
+        Button { editingNote = note } label: {
             NoteRow(note: note)
         }
+        .buttonStyle(.plain)
         .listRowBackground(Color.noteBg)
         .listRowInsets(EdgeInsets())
         .listRowSeparatorTint(Color.noteRule)
