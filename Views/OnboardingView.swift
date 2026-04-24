@@ -20,7 +20,18 @@ struct OnboardingView: View {
             Spacer()
 
             PrimaryActionButton(title: "Start writing", action: generateAndEnter)
-                .padding(.bottom, Space.m)
+                .padding(.bottom, Space.s)
+
+            Button(action: { showAdvanced = true }) {
+                Text("Advanced setup")
+                    .font(NoteFont.captionS)
+                    .foregroundStyle(Color.noteInkDim)
+                    .underline()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Space.s)
+            }
+            .buttonStyle(.plain)
+            .padding(.bottom, Space.m)
 
             PoweredByNostrFooter()
                 .padding(.bottom, Space.sectionGap)
@@ -28,6 +39,14 @@ struct OnboardingView: View {
         .padding(.top, 24)
         .padding(.horizontal, Space.gutterH)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .sheet(isPresented: $showAdvanced) {
+            NavigationStack {
+                AdvancedSetupView(onComplete: {
+                    showAdvanced = false
+                    onComplete()
+                })
+            }
+        }
     }
 
     private func generateAndEnter() {

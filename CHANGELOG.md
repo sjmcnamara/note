@@ -9,6 +9,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.6.0] — 2026-04-24
+
+### Added
+- Screen 6 — Advanced setup: full implementation replacing stub
+- Hero (`Bring your own keys.` with italic serif on "own keys."), sub-copy, three bordered option cards (Generate / Import / Restore), footer with privacy line + Nostr credit
+- Recommended variant on Generate row — 1.5pt `noteInk` border and `recommended` badge
+- Generate row calls `MockIdentity.generate()`, triggers `.success` haptic, and dismisses (or runs onboarding `onComplete` if invoked from onboarding)
+- Restore row shows transient toast — full flow lands with real Nostr later
+- `KeyImportView` stub created so the Import row has a destination; full Screen 7 to come
+- Onboarding gains secondary "Advanced setup" underline link → sheet-presents `AdvancedSetupView` inside its own `NavigationStack`
+
+### Changed
+- `MARKETING_VERSION` 0.6.0 / `CURRENT_PROJECT_VERSION` 3
+
+---
+
 ## [0.5.2] — 2026-04-24
 
 ### Added

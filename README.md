@@ -1,6 +1,6 @@
 # NO.TE
 
-**Status:** v0.5.2 — Swipe-to-delete + copy tweaks
+**Status:** v0.6.0 — Screen 6 (Advanced setup)
 
 A private, local-first note app for iPhone. Notes stay on your device. Nostr provides identity and optional encrypted backup — nothing is shared unless you ask for it.
 
