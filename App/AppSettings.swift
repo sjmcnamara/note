@@ -1,13 +1,11 @@
 import Foundation
-import Observation
 
-@Observable
-final class AppSettings {
-    var textSizeStep: Int = 0 {
+final class AppSettings: ObservableObject {
+    static let shared = AppSettings()
+
+    @Published var textSizeStep: Int = UserDefaults.standard.integer(forKey: "textSizeStep") {
         didSet { UserDefaults.standard.set(textSizeStep, forKey: "textSizeStep") }
     }
 
-    init() {
-        textSizeStep = UserDefaults.standard.integer(forKey: "textSizeStep")
-    }
+    private init() {}
 }

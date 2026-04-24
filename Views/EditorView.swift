@@ -271,7 +271,7 @@ private struct TagsRow: View {
 
 private struct BodyField: View {
     @Binding var text: String
-    @Environment(AppSettings.self) private var settings
+    @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
         TextEditor(text: $text)
@@ -326,7 +326,7 @@ private struct TodoRow: View {
     let onEdit: () -> Void
     let onReturn: () -> Void
     let onDelete: () -> Void
-    @Environment(AppSettings.self) private var settings
+    @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
         HStack(alignment: .center, spacing: Space.m) {
@@ -428,5 +428,5 @@ private struct ToolBtn: View {
         EditorView(note: note)
     }
     .modelContainer(container)
-    .environment(AppSettings())
+    .environmentObject(AppSettings.shared)
 }

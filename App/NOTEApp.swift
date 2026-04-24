@@ -4,7 +4,6 @@ import SwiftData
 @main
 struct NOTEApp: App {
     @State private var container: ModelContainer?
-    @State private var settings = AppSettings()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -18,7 +17,7 @@ struct NOTEApp: App {
             if let container {
                 ContentView()
                     .modelContainer(container)
-                    .environment(settings)
+                    .environmentObject(AppSettings.shared)
             } else {
                 Color.noteBg
                     .ignoresSafeArea()

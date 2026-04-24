@@ -293,7 +293,7 @@ private struct AppearanceTile: View {
 private struct SettingRows: View {
     @AppStorage("tagSuggestions") private var tagSuggestions = true
     @AppStorage("morningPrompt")  private var morningPrompt  = false
-    @Environment(AppSettings.self) private var settings
+    @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
         VStack(spacing: 0) {
@@ -522,5 +522,5 @@ private struct FooterWordmark: View {
     NavigationStack {
         SettingsView()
     }
-    .environment(AppSettings())
+    .environmentObject(AppSettings.shared)
 }

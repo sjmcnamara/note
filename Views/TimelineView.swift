@@ -245,7 +245,7 @@ private struct DaySection: View {
 
 private struct NoteRow: View {
     let note: Note
-    @Environment(AppSettings.self) private var settings
+    @EnvironmentObject private var settings: AppSettings
 
     private static let timeFmt: DateFormatter = {
         let f = DateFormatter()
