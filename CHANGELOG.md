@@ -9,6 +9,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.5.1] — 2026-04-24
+
+### Added
+- `AboutView` — app version + build (read from `CFBundleShortVersionString` / `CFBundleVersion`), NO.TE wordmark, "Powered by Nostr" credit
+- `AdvancedSettingsView` — houses Identity card, Private Backup card, and Change keys / Restore rows (both linking to `AdvancedSetupView` stub)
+- `MARKETING_VERSION` (0.5.1) and `CURRENT_PROJECT_VERSION` (1) added to `project.yml`
+
+### Changed
+- Settings split into Basic / Advanced / About. Basic screen now only contains Appearance, Text size, and two nav rows (About, Advanced)
+- Text size slider labels: every step gets a unique label (X-Small, Smaller, Small, Default, Large, Larger, X-Large)
+- Every `NoteFont` token now uses `relativeTo:` — the text size slider applies `dynamicTypeSize(...)` at the root so all app text scales together
+- Footer wordmark moved from Settings to About
+
+### Removed
+- `Tag suggestions` toggle (no design, will be implicit when tag autocomplete ships)
+- `Morning prompt` toggle (no design, no clear use case)
+
+---
+
 ## [0.5.0] — 2026-04-24
 
 ### Added

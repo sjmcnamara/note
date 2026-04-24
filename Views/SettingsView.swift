@@ -1,22 +1,18 @@
 import SwiftUI
-import LocalAuthentication
 
 // MARK: - SettingsView
 
 struct SettingsView: View {
     var identity: any NostrIdentity = MockIdentity()
-    var backup: MockBackup = MockBackup()
-    @State private var revealNsec = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.sectionGap) {
                 SettingsNavBar()
-                IdentityCard(identity: identity, revealNsec: $revealNsec)
+                IdentityRow(identity: identity)
                 AppearancePicker()
-                SettingRows()
-                PrivateBackupCard(backup: backup)
-                FooterWordmark()
+                TextSizeRow()
+                NavCard()
             }
             .padding(.horizontal, Space.gutterH)
             .padding(.bottom, Space.sectionGap * 2)
@@ -55,12 +51,10 @@ private struct SettingsNavBar: View {
     }
 }
 
-// MARK: - Identity card
+// MARK: - Identity row
 
-private struct IdentityCard: View {
+private struct IdentityRow: View {
     let identity: any NostrIdentity
-    @Binding var revealNsec: Bool
-    @State private var hideTask: Task<Void, Never>?
     @State private var copyConfirmed = false
 
     private var shortNpub: String {
@@ -70,152 +64,40 @@ private struct IdentityCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.l) {
+        HStack(spacing: Space.l) {
             IdentityAvatar(npub: identity.npub)
 
-            VStack(alignment: .leading, spacing: Space.xs) {
+            VStack(alignment: .leading, spacing: Space.xxs) {
                 Text("Public key · npub")
                     .font(NoteFont.captionS)
                     .foregroundStyle(Color.noteInkMute)
-
-                HStack(spacing: Space.m) {
-                    Text(shortNpub)
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(Color.noteInkDim)
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Button {
-                        UIPasteboard.general.string = identity.npub
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        withAnimation { copyConfirmed = true }
-                        Task {
-                            try? await Task.sleep(for: .seconds(2))
-                            withAnimation { copyConfirmed = false }
-                        }
-                    } label: {
-                        Text(copyConfirmed ? "Copied" : "Copy")
-                            .font(NoteFont.captionS)
-                            .foregroundStyle(Color.noteInkDim)
-                            .padding(.horizontal, Space.base)
-                            .padding(.vertical, Space.xs)
-                            .background(Color.noteBg, in: RoundedRectangle(cornerRadius: Radius.s))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: Space.xs) {
-                Text("nsec · hidden")
-                    .font(NoteFont.captionS)
-                    .foregroundStyle(Color.noteInkMute)
-
-                HStack(spacing: Space.m) {
-                    Image(systemName: "lock")
-                        .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(Color.noteInkMute)
-
-                    Group {
-                        if revealNsec {
-                            Text(identity.nsec)
-                                .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(Color.noteInk)
-                        } else {
-                            Text(String(repeating: "•", count: 22))
-                                .font(.system(.caption, design: .monospaced))
-                                .foregroundStyle(Color.noteInkMute)
-                        }
-                    }
+                Text(shortNpub)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(Color.noteInkDim)
                     .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-                    Button {
-                        if revealNsec {
-                            hideTask?.cancel()
-                            withAnimation { revealNsec = false }
-                        } else {
-                            authenticate()
-                        }
-                    } label: {
-                        Text(revealNsec ? "Hide" : "Reveal")
-                            .font(NoteFont.captionS)
-                            .foregroundStyle(Color.noteInkDim)
-                            .padding(.horizontal, Space.base)
-                            .padding(.vertical, Space.xs)
-                            .background(Color.noteBg, in: RoundedRectangle(cornerRadius: Radius.s))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Secret key, hidden, double-tap to reveal")
+            Button {
+                UIPasteboard.general.string = identity.npub
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                withAnimation { copyConfirmed = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    withAnimation { copyConfirmed = false }
                 }
-                .padding(Space.l)
-                .background(Color.noteBg, in: RoundedRectangle(cornerRadius: Radius.m))
-            }
-
-            HStack(spacing: 0) {
-                Text("Your secret key never leaves this device. ")
+            } label: {
+                Text(copyConfirmed ? "Copied" : "Copy")
                     .font(NoteFont.captionS)
-                    .foregroundStyle(Color.noteInkMute)
-                Text("Back up now")
-                    .font(NoteFont.captionS)
-                    .foregroundStyle(Color.noteInkMute)
-                    .underline()
+                    .foregroundStyle(Color.noteInkDim)
+                    .padding(.horizontal, Space.base)
+                    .padding(.vertical, Space.xs)
+                    .background(Color.noteBg, in: RoundedRectangle(cornerRadius: Radius.s))
             }
+            .buttonStyle(.plain)
         }
-        .padding(Space.xl)
+        .padding(Space.l)
         .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.xxl))
-    }
-
-    private func authenticate() {
-        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-        let ctx = LAContext()
-        var err: NSError?
-        guard ctx.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &err) else {
-            withAnimation { revealNsec = true }
-            scheduleHide()
-            return
-        }
-        ctx.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
-                           localizedReason: "Reveal your secret key") { ok, _ in
-            guard ok else { return }
-            DispatchQueue.main.async {
-                withAnimation { revealNsec = true }
-                scheduleHide()
-            }
-        }
-    }
-
-    private func scheduleHide() {
-        hideTask?.cancel()
-        hideTask = Task {
-            try? await Task.sleep(for: .seconds(30))
-            guard !Task.isCancelled else { return }
-            await MainActor.run { withAnimation { revealNsec = false } }
-        }
-    }
-}
-
-private struct IdentityAvatar: View {
-    let npub: String
-
-    private var hue: Double {
-        let hash = npub.unicodeScalars.reduce(0) { ($0 &* 31) &+ Int($1.value) }
-        return Double(abs(hash) % 360) / 360.0
-    }
-
-    var body: some View {
-        Circle()
-            .fill(
-                AngularGradient(
-                    colors: [
-                        Color(hue: hue, saturation: 0.55, brightness: 0.90),
-                        Color(hue: (hue + 0.33).truncatingRemainder(dividingBy: 1), saturation: 0.55, brightness: 0.90),
-                        Color(hue: (hue + 0.67).truncatingRemainder(dividingBy: 1), saturation: 0.55, brightness: 0.90),
-                        Color(hue: hue, saturation: 0.55, brightness: 0.90),
-                    ],
-                    center: .center
-                )
-            )
-            .frame(width: 44, height: 44)
     }
 }
 
@@ -288,68 +170,34 @@ private struct AppearanceTile: View {
     }
 }
 
-// MARK: - Settings rows
+// MARK: - Text size row
 
-private struct SettingRows: View {
-    @AppStorage("tagSuggestions") private var tagSuggestions = true
-    @AppStorage("morningPrompt")  private var morningPrompt  = false
+private struct TextSizeRow: View {
     @EnvironmentObject private var settings: AppSettings
 
     var body: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: Space.xs) {
-                HStack {
-                    Text("Text size")
-                        .font(NoteFont.body)
-                        .foregroundStyle(Color.noteInk)
-                    Spacer()
-                    Text(textSizeLabel)
-                        .font(NoteFont.captionS)
-                        .foregroundStyle(Color.noteInkMute)
-                        .monospacedDigit()
-                }
-                Slider(
-                    value: Binding(
-                        get: { Double(settings.textSizeStep) },
-                        set: { settings.textSizeStep = Int($0.rounded()) }
-                    ),
-                    in: -3...3,
-                    step: 1
-                )
-                .tint(Color.noteInk)
-            }
-            .padding(.vertical, Space.l)
-
-            Rectangle().fill(Color.noteRule).frame(height: 1)
-
-            settingsRow {
-                Text("Tag suggestions")
+        VStack(alignment: .leading, spacing: Space.xs) {
+            HStack {
+                Text("Text size")
                     .font(NoteFont.body)
                     .foregroundStyle(Color.noteInk)
                 Spacer()
-                Toggle("", isOn: $tagSuggestions)
-                    .labelsHidden()
-                    .tint(Color.noteInk)
+                Text(textSizeLabel)
+                    .font(NoteFont.captionS)
+                    .foregroundStyle(Color.noteInkMute)
+                    .monospacedDigit()
             }
-
-            Rectangle().fill(Color.noteRule).frame(height: 1)
-
-            settingsRow {
-                Text("Morning prompt")
-                    .font(NoteFont.body)
-                    .foregroundStyle(Color.noteInk)
-                Spacer()
-                Toggle("", isOn: $morningPrompt)
-                    .labelsHidden()
-                    .tint(Color.noteInk)
-            }
+            Slider(
+                value: Binding(
+                    get: { Double(settings.textSizeStep) },
+                    set: { settings.textSizeStep = Int($0.rounded()) }
+                ),
+                in: -3...3,
+                step: 1
+            )
+            .tint(Color.noteInk)
         }
-    }
-
-    @ViewBuilder
-    private func settingsRow<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        HStack { content() }
-            .padding(.vertical, Space.l)
+        .padding(.vertical, Space.l)
     }
 
     private var textSizeLabel: String {
@@ -365,158 +213,39 @@ private struct SettingRows: View {
     }
 }
 
-// MARK: - Private backup card
+// MARK: - Nav card
 
-private struct PrivateBackupCard: View {
-    var backup: MockBackup
-    @State private var enabled = false
-
+private struct NavCard: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.l) {
-            HStack(spacing: Space.m) {
-                Image(systemName: "checkmark.shield")
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundStyle(Color.noteInkDim)
-
-                Text("Private Backup")
-                    .font(NoteFont.titleS)
-                    .foregroundStyle(Color.noteInk)
-
-                Text("E2EE")
-                    .font(NoteFont.micro)
-                    .foregroundStyle(Color.noteInkDim)
-                    .padding(.horizontal, Space.xs)
-                    .padding(.vertical, 2)
-                    .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.s))
-
-                Spacer()
-
-                Toggle("", isOn: $enabled)
-                    .labelsHidden()
-                    .tint(Color.noteInk)
+        VStack(spacing: 0) {
+            NavigationLink { AboutView() } label: {
+                navRow(label: "About")
             }
+            .buttonStyle(.plain)
 
-            backupBody
+            Rectangle().fill(Color.noteRule).frame(height: 1)
 
-            RelayRow(status: backup.status)
-
-            HStack(spacing: Space.l) {
-                OutlineButton(label: "Add relay") {}
-                OutlineButton(label: "Restore") {}
+            NavigationLink { AdvancedSettingsView() } label: {
+                navRow(label: "Advanced")
             }
+            .buttonStyle(.plain)
         }
-        .padding(Space.xl)
-        .background(Color.noteBg)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.xxl))
-        .overlay {
-            RoundedRectangle(cornerRadius: Radius.xxl)
-                .strokeBorder(Color.noteRule, lineWidth: 1)
-        }
-        .onChange(of: enabled) { _, on in
-            Task {
-                if on {
-                    backup.status = .connecting
-                    try? await Task.sleep(for: .milliseconds(800))
-                    backup.status = .synced(lastAt: Date())
-                } else {
-                    backup.status = .disabled
-                }
-            }
-        }
+        .padding(.horizontal, Space.xl)
+        .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.xxl))
     }
 
-    private var backupBody: some View {
-        (
-            Text("Encrypted with your ")
-                .font(NoteFont.bodyS)
-                .foregroundStyle(Color.noteInkDim)
-            + Text("nsec")
-                .font(NoteFont.italic(13))
-                .foregroundStyle(Color.noteInkDim)
-            + Text(". Only you can decrypt.")
-                .font(NoteFont.bodyS)
-                .foregroundStyle(Color.noteInkDim)
-        )
-    }
-}
-
-private struct RelayRow: View {
-    let status: BackupStatus
-
-    private var statusText: String {
-        switch status {
-        case .disabled:           return "Disabled"
-        case .connecting:         return "Connecting…"
-        case .syncing:            return "Syncing…"
-        case .synced:             return "Synced"
-        case .error(let message): return message
-        }
-    }
-
-    private var dotColor: Color {
-        switch status {
-        case .synced: return .noteOk
-        case .error:  return Color(white: 0.6)
-        default:      return .noteInkMute
-        }
-    }
-
-    var body: some View {
-        HStack(spacing: Space.m) {
-            ZStack {
-                Circle()
-                    .fill(dotColor.opacity(0.25))
-                    .frame(width: 14, height: 14)
-                Circle()
-                    .fill(dotColor)
-                    .frame(width: 7, height: 7)
-            }
-
-            Text("wss://relay.pub")
-                .font(.system(.caption2, design: .monospaced))
-                .foregroundStyle(Color.noteInkDim)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Text(statusText)
-                .font(NoteFont.captionS)
+    @ViewBuilder
+    private func navRow(label: String) -> some View {
+        HStack {
+            Text(label)
+                .font(NoteFont.body)
+                .foregroundStyle(Color.noteInk)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(Color.noteInkMute)
         }
-        .padding(.horizontal, Space.l)
-        .padding(.vertical, Space.base)
-        .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.m))
-    }
-}
-
-private struct OutlineButton: View {
-    let label: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(NoteFont.bodyS)
-                .foregroundStyle(Color.noteInkDim)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, Space.base)
-                .background {
-                    RoundedRectangle(cornerRadius: Radius.m)
-                        .strokeBorder(Color.noteRule, lineWidth: 1)
-                }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-// MARK: - Footer
-
-private struct FooterWordmark: View {
-    var body: some View {
-        Text("NO.TE · Powered by Nostr · open protocol")
-            .font(Font.custom("Inter Tight", size: 10.5, relativeTo: .caption2))
-            .foregroundStyle(Color.noteInkMute)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.top, Space.m)
-            .padding(.bottom, Space.l)
+        .padding(.vertical, Space.l)
     }
 }
 
