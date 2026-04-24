@@ -4,9 +4,11 @@ import SwiftData
 @main
 struct NOTEApp: App {
     init() {
-        // Set the UIWindow background directly so the safe-area regions
-        // (status bar, home indicator) never show the system default.
         UIWindow.appearance().backgroundColor = UIColor(named: "noteBg")
+        // Pre-create Application Support so SwiftData doesn't hit the slow
+        // CoreData recovery path on first launch, which triggers a watchdog kill.
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        try? FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
     }
 
     var body: some Scene {
