@@ -28,6 +28,15 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Action rows: "New note with this tag", "See all in …"
 - AI answer block removed — local search only for now
 
+### [0.5.0] Screen 5 — Settings
+- Identity card: avatar (conic gradient from npub), npub copy chip, FaceID-gated nsec reveal (30s auto-hide), "Back up now" footer link
+- Appearance picker: Light / Night / System tiles, active tile 2pt ink border, `@AppStorage("appearance")` → `preferredColorScheme` applied globally in ContentView
+- Plain ruled rows: Text size (−/+), Tag suggestions, Morning prompt
+- Private Backup card: shield icon, E2EE badge, toggle simulates connecting/synced, relay row with halo dot, Add relay + Restore outline buttons (stubbed)
+- Footer wordmark: "NO.TE · Powered by Nostr · open protocol"
+- `NostrIdentity` protocol and `MockIdentity` extended with `nsec`
+- `NSFaceIDUsageDescription` added to project
+
 ### [0.4.0] Screen 4 — Editor + SwiftData persistence
 - Full editor: title (last word in Instrument Serif italic), body, tags, todos
 - Saved dot pulsing on 400ms debounced write
@@ -42,14 +51,6 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 ---
 
 ## Up next
-
-### Screen 5 — Settings
-- Identity card: npub + hidden nsec + FaceID-gated Reveal (auto-hide 30s)
-- Appearance picker (Light / Night / System)
-- Plain ruled rows section
-- Private Backup card bound to `NostrBackup.status`
-- Footer wordmark
-- nsec must never be logged
 
 ### Screen 6 — Advanced setup
 - Three options: Generate (recommended), Import nsec, Restore from backup

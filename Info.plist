@@ -20,6 +20,8 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Reveal your secret key</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>InterTight.ttf</string>
@@ -27,10 +29,10 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>
-		<key>UIImageName</key>
-		<string>LaunchLogo</string>
 		<key>UIColorName</key>
 		<string>noteBg</string>
+		<key>UIImageName</key>
+		<string>LaunchLogo</string>
 	</dict>
 	<key>UIRequiresFullScreen</key>
 	<true/>

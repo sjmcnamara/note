@@ -3,6 +3,7 @@ import Observation
 
 struct MockIdentity: NostrIdentity {
     let npub = "npub1mock00000000000000000000000000000000000000000000000000000000"
+    let nsec = "nsec1mock00000000000000000000000000000000000000000000000000000000"
 
     static func generate() -> MockIdentity { MockIdentity() }
 
