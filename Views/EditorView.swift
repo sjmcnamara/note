@@ -11,7 +11,6 @@ struct EditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
-    @EnvironmentObject private var settings: AppSettings
 
     private var wordCount: Int {
         note.body.split { $0.isWhitespace }.count
@@ -30,9 +29,9 @@ struct EditorView: View {
                     EditorTimestamp(date: note.createdAt)
                     TitleField(title: $note.title)
                     TagsRow(tags: $note.tags)
-                    BodyField(text: $note.body, textSizeStep: settings.textSizeStep)
+                    BodyField(text: $note.body)
                     if !note.todos.isEmpty {
-                        TodoSection(note: note, textSizeStep: settings.textSizeStep, onEdit: markEdited, onAddTodo: addTodo)
+                        TodoSection(note: note, onEdit: markEdited, onAddTodo: addTodo)
                     }
                 }
                 .padding(.horizontal, 26)
@@ -181,7 +180,7 @@ private struct TitleField: View {
         ZStack(alignment: .topLeading) {
             // Always in the hierarchy so focus state is never lost on re-render
             TextField("", text: $title, axis: .vertical)
-                .font(.custom("Inter Tight", size: 26).weight(.medium))
+                .font(NoteFont.display)
                 .foregroundStyle(focused || title.isEmpty ? Color.noteInk : Color.clear)
                 .tint(Color.noteInk)
                 .focused($focused)
@@ -206,7 +205,7 @@ private struct TitleField: View {
 
         let t: Text = rest.isEmpty
             ? Text(last).font(NoteFont.italic(28))
-            : Text(rest + " ").font(.custom("Inter Tight", size: 26).weight(.medium))
+            : Text(rest + " ").font(NoteFont.display)
               + Text(last).font(NoteFont.italic(28))
 
         return t
@@ -272,11 +271,10 @@ private struct TagsRow: View {
 
 private struct BodyField: View {
     @Binding var text: String
-    let textSizeStep: Int
 
     var body: some View {
         TextEditor(text: $text)
-            .font(.custom("Inter Tight", size: 15 + CGFloat(textSizeStep) * 8))
+            .font(Font.custom("Inter Tight", size: 15, relativeTo: .body))
             .foregroundStyle(Color.noteInk)
             .tint(Color.noteInk)
             .scrollContentBackground(.hidden)
@@ -284,7 +282,6 @@ private struct BodyField: View {
             .frame(minHeight: 120)
             .textContentType(.none)
             .padding(.bottom, Space.sectionGap)
-            .id(textSizeStep)
     }
 }
 
@@ -292,7 +289,6 @@ private struct BodyField: View {
 
 private struct TodoSection: View {
     @Bindable var note: Note
-    let textSizeStep: Int
     let onEdit: () -> Void
     let onAddTodo: () -> Void
     @Environment(\.modelContext) private var modelContext
@@ -307,7 +303,6 @@ private struct TodoSection: View {
             ForEach($note.todos) { $todo in
                 TodoRow(
                     todo: $todo,
-                    textSizeStep: textSizeStep,
                     onEdit: onEdit,
                     onReturn: onAddTodo,
                     onDelete: {
@@ -326,7 +321,6 @@ private struct TodoSection: View {
 
 private struct TodoRow: View {
     @Binding var todo: TodoItem
-    let textSizeStep: Int
     let onEdit: () -> Void
     let onReturn: () -> Void
     let onDelete: () -> Void
@@ -338,13 +332,13 @@ private struct TodoRow: View {
                 onEdit()
             } label: {
                 Text(todo.done ? "▪" : "▢")
-                    .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep) * 8))
+                    .font(NoteFont.body)
                     .foregroundStyle(todo.done ? Color.noteInkDim : Color.noteInkMute)
             }
             .buttonStyle(.plain)
 
             TextField("", text: $todo.text)
-                .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep)))
+                .font(NoteFont.body)
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)

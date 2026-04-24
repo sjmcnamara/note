@@ -508,7 +508,7 @@ private struct OutlineButton: View {
 private struct FooterWordmark: View {
     var body: some View {
         Text("NO.TE · Powered by Nostr · open protocol")
-            .font(.custom("Inter Tight", size: 10.5))
+            .font(Font.custom("Inter Tight", size: 10.5, relativeTo: .caption2))
             .foregroundStyle(Color.noteInkMute)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, Space.m)

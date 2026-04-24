@@ -40,7 +40,6 @@ private func makeGroups(_ notes: [Note]) -> [DayGroup] {
 struct TimelineView: View {
     @Query(sort: \Note.createdAt, order: .reverse) private var notes: [Note]
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var settings: AppSettings
     @State private var activeTag: String? = nil
     @State private var showSearch = false
     @State private var composeNote: Note?
@@ -69,15 +68,12 @@ struct TimelineView: View {
             ZStack(alignment: .bottom) {
                 VStack(spacing: 0) {
                     TimelineHeader(showSearch: $showSearch)
-                    Text("DEBUG step=\(settings.textSizeStep)")
-                        .foregroundStyle(.red)
-                        .font(.system(size: 20, weight: .bold))
                     TagStrip(tags: tags, activeTag: $activeTag)
 
                     ScrollView {
                         LazyVStack(spacing: 0) {
                             ForEach(makeGroups(filtered)) { group in
-                                DaySection(group: group, textSizeStep: settings.textSizeStep)
+                                DaySection(group: group)
                             }
                         }
                         .padding(.bottom, 96)
@@ -214,7 +210,6 @@ private struct TagChip: View {
 
 private struct DaySection: View {
     let group: DayGroup
-    let textSizeStep: Int
 
     var body: some View {
         VStack(spacing: 0) {
@@ -237,7 +232,7 @@ private struct DaySection: View {
                             .padding(.leading, Space.gutterH)
                     }
                     NavigationLink { EditorView(note: note) } label: {
-                        NoteRow(note: note, textSizeStep: textSizeStep)
+                        NoteRow(note: note)
                     }
                     .buttonStyle(.plain)
                 }
@@ -250,7 +245,6 @@ private struct DaySection: View {
 
 private struct NoteRow: View {
     let note: Note
-    let textSizeStep: Int
 
     private static let timeFmt: DateFormatter = {
         let f = DateFormatter()
@@ -276,7 +270,7 @@ private struct NoteRow: View {
 
                 if !note.body.isEmpty {
                     Text(note.body)
-                        .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep) * 8))
+                        .font(NoteFont.body)
                         .foregroundStyle(Color.noteInkDim)
                         .lineLimit(2)
                 }
