@@ -186,7 +186,7 @@ private struct IdentityCard: View {
     }
 }
 
-private struct IdentityAvatar: View {
+struct IdentityAvatar: View {
     let npub: String
 
     private var hue: Double {

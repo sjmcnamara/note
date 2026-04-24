@@ -3,10 +3,13 @@ import SwiftUI
 // MARK: - SettingsView
 
 struct SettingsView: View {
+    var identity: any NostrIdentity = MockIdentity()
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.sectionGap) {
                 SettingsNavBar()
+                IdentityRow(identity: identity)
                 AppearancePicker()
                 TextSizeRow()
                 NavCard()
@@ -45,6 +48,56 @@ private struct SettingsNavBar: View {
         }
         .padding(.top, 44)
         .padding(.bottom, Space.s)
+    }
+}
+
+// MARK: - Identity row
+
+private struct IdentityRow: View {
+    let identity: any NostrIdentity
+    @State private var copyConfirmed = false
+
+    private var shortNpub: String {
+        let n = identity.npub
+        guard n.count > 16 else { return n }
+        return String(n.prefix(12)) + "…" + String(n.suffix(4))
+    }
+
+    var body: some View {
+        HStack(spacing: Space.l) {
+            IdentityAvatar(npub: identity.npub)
+
+            VStack(alignment: .leading, spacing: Space.xxs) {
+                Text("Public key · npub")
+                    .font(NoteFont.captionS)
+                    .foregroundStyle(Color.noteInkMute)
+                Text(shortNpub)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(Color.noteInkDim)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                UIPasteboard.general.string = identity.npub
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                withAnimation { copyConfirmed = true }
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    withAnimation { copyConfirmed = false }
+                }
+            } label: {
+                Text(copyConfirmed ? "Copied" : "Copy")
+                    .font(NoteFont.captionS)
+                    .foregroundStyle(Color.noteInkDim)
+                    .padding(.horizontal, Space.base)
+                    .padding(.vertical, Space.xs)
+                    .background(Color.noteBg, in: RoundedRectangle(cornerRadius: Radius.s))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(Space.l)
+        .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.xxl))
     }
 }
 
