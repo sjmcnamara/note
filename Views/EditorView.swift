@@ -258,7 +258,7 @@ private struct TagsRow: View {
     }
 
     private func commitTag() {
-        let trimmed = draft.trimmingCharacters(in: .whitespaces)
+        let trimmed = draft.trimmingCharacters(in: .whitespaces).lowercased()
         if !trimmed.isEmpty && !tags.contains(trimmed) {
             tags.append(trimmed)
         }
@@ -271,10 +271,11 @@ private struct TagsRow: View {
 
 private struct BodyField: View {
     @Binding var text: String
+    @AppStorage("textSizeStep") private var textSizeStep = 0
 
     var body: some View {
         TextEditor(text: $text)
-            .font(.custom("Inter Tight", size: 15))
+            .font(.custom("Inter Tight", size: 15 + CGFloat(textSizeStep * 2)))
             .foregroundStyle(Color.noteInk)
             .tint(Color.noteInk)
             .scrollContentBackground(.hidden)
@@ -324,6 +325,7 @@ private struct TodoRow: View {
     let onEdit: () -> Void
     let onReturn: () -> Void
     let onDelete: () -> Void
+    @AppStorage("textSizeStep") private var textSizeStep = 0
 
     var body: some View {
         HStack(alignment: .center, spacing: Space.m) {
@@ -332,13 +334,13 @@ private struct TodoRow: View {
                 onEdit()
             } label: {
                 Text(todo.done ? "▪" : "▢")
-                    .font(.custom("Inter Tight", size: 14))
+                    .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep * 2)))
                     .foregroundStyle(todo.done ? Color.noteInkDim : Color.noteInkMute)
             }
             .buttonStyle(.plain)
 
             TextField("", text: $todo.text)
-                .font(.custom("Inter Tight", size: 14))
+                .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep * 2)))
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)
