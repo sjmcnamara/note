@@ -10,6 +10,7 @@ struct EditorView: View {
     @State private var saveTask: Task<Void, Never>?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     private var wordCount: Int {
         note.body.split { $0.isWhitespace }.count
@@ -47,16 +48,23 @@ struct EditorView: View {
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .onChange(of: note.title) { _, _ in markEdited() }
-        .onChange(of: note.body)  { _, _ in markEdited() }
+        .onChange(of: note.title)  { _, _ in markEdited() }
+        .onChange(of: note.body)   { _, _ in markEdited() }
+        .onChange(of: scenePhase)  { _, phase in
+            if phase == .background { persist() }
+        }
         .onDisappear {
             saveTask?.cancel()
             if isNew && isEmpty {
                 modelContext.delete(note)
-            } else {
-                try? modelContext.save()
             }
+            persist()
         }
+    }
+
+    private func persist() {
+        do { try modelContext.save() }
+        catch { print("EditorView save error: \(error)") }
     }
 
     private func markEdited() {
@@ -71,7 +79,7 @@ struct EditorView: View {
             try? await Task.sleep(for: .milliseconds(400))
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                try? modelContext.save()
+                persist()
                 withAnimation(.spring(duration: 0.4)) { saving = false }
             }
         }

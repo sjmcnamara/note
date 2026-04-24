@@ -8,9 +8,6 @@ struct NOTEApp: App {
 
     init() {
         UIWindow.appearance().backgroundColor = UIColor(named: "noteBg")
-        // init() must return fast — iOS watchdog kills apps that take > ~5 s
-        // before the first frame. Container creation happens in .task below,
-        // after the launch window has closed.
     }
 
     var body: some Scene {
@@ -19,20 +16,14 @@ struct NOTEApp: App {
                 ContentView()
                     .modelContainer(container)
             } else {
-                // Visually identical to the launch screen; hides the delay.
+                // Shown while the store is being created on a background thread.
+                // Identical to the launch screen background so the transition
+                // is invisible. ContentView is never shown until the container
+                // is fully ready, so modelContext is always available on tap.
                 Color.noteBg
                     .ignoresSafeArea()
-                    .task {
-                        let appSupport = FileManager.default
-                            .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                        try? FileManager.default.createDirectory(
-                            at: appSupport, withIntermediateDirectories: true)
-                        do {
-                            container = try ModelContainer(
-                                for: Schema([Note.self, TodoItem.self]))
-                        } catch {
-                            fatalError("SwiftData container failed: \(error)")
-                        }
+                    .task(priority: .userInitiated) {
+                        container = await Self.makeContainer()
                     }
             }
         }
@@ -41,5 +32,24 @@ struct NOTEApp: App {
                 try? container?.mainContext.save()
             }
         }
+    }
+
+    // Runs ModelContainer.init() on a background thread so the main actor
+    // stays free during the (potentially slow) first-install SQLite setup.
+    // NSPersistentContainer.loadPersistentStores is documented thread-safe;
+    // mainContext is only ever touched on the main actor via SwiftUI environment.
+    private static func makeContainer() async -> ModelContainer {
+        await Task.detached(priority: .userInitiated) {
+            let appSupport = FileManager.default
+                .urls(for: .applicationSupportDirectory, in: .userDomainMask)
+                .first!
+            try? FileManager.default.createDirectory(
+                at: appSupport, withIntermediateDirectories: true)
+            do {
+                return try ModelContainer(for: Note.self)
+            } catch {
+                fatalError("ModelContainer init failed: \(error)")
+            }
+        }.value
     }
 }
