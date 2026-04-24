@@ -43,6 +43,7 @@ struct TimelineView: View {
     @State private var activeTag: String? = nil
     @State private var showSearch = false
     @State private var composeNote: Note?
+    @State private var editingNote: Note?
 
     private let defaultTags = ["work", "daily", "ideas", "reading", "dreams"]
 
@@ -70,14 +71,21 @@ struct TimelineView: View {
                     TimelineHeader(showSearch: $showSearch)
                     TagStrip(tags: tags, activeTag: $activeTag)
 
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(makeGroups(filtered)) { group in
-                                DaySection(group: group)
+                    List {
+                        ForEach(makeGroups(filtered)) { group in
+                            Section {
+                                ForEach(group.notes) { note in
+                                    noteRow(note)
+                                }
+                            } header: {
+                                dayHeader(group.label)
                             }
                         }
-                        .padding(.bottom, 96)
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .environment(\.defaultMinListHeaderHeight, 0)
+                    .contentMargins(.bottom, 96, for: .scrollContent)
                 }
 
                 TimelineComposeBar(onCreate: createNote)
@@ -89,6 +97,9 @@ struct TimelineView: View {
             .navigationDestination(item: $composeNote) { note in
                 EditorView(note: note, isNew: true)
             }
+            .navigationDestination(item: $editingNote) { note in
+                EditorView(note: note)
+            }
             .overlay {
                 if showSearch {
                     SearchView(notes: notes, onDismiss: {
@@ -98,6 +109,40 @@ struct TimelineView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.15), value: showSearch)
+        }
+    }
+
+    private func dayHeader(_ label: String) -> some View {
+        HStack {
+            Text(label)
+                .font(NoteFont.captionS)
+                .foregroundStyle(Color.noteInkMute)
+                .textCase(nil)
+            Spacer()
+        }
+        .padding(.horizontal, Space.gutterH)
+        .padding(.top, Space.sectionGap)
+        .padding(.bottom, Space.m)
+        .background(Color.noteBg)
+        .listRowInsets(EdgeInsets())
+    }
+
+    @ViewBuilder
+    private func noteRow(_ note: Note) -> some View {
+        Button { editingNote = note } label: {
+            NoteRow(note: note)
+        }
+        .buttonStyle(.plain)
+        .listRowBackground(Color.noteBg)
+        .listRowInsets(EdgeInsets())
+        .listRowSeparatorTint(Color.noteRule)
+        .alignmentGuide(.listRowSeparatorLeading) { _ in Space.gutterH }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                withAnimation { modelContext.delete(note) }
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
         }
     }
 }
@@ -203,41 +248,6 @@ private struct TagChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("filter: \(label)")
-    }
-}
-
-// MARK: - Day section
-
-private struct DaySection: View {
-    let group: DayGroup
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text(group.label)
-                    .font(NoteFont.captionS)
-                    .foregroundStyle(Color.noteInkMute)
-                Spacer()
-            }
-            .padding(.horizontal, Space.gutterH)
-            .padding(.top, Space.sectionGap)
-            .padding(.bottom, Space.m)
-
-            ForEach(Array(group.notes.enumerated()), id: \.element.id) { i, note in
-                VStack(spacing: 0) {
-                    if i > 0 {
-                        Rectangle()
-                            .fill(Color.noteRule)
-                            .frame(height: 1)
-                            .padding(.leading, Space.gutterH)
-                    }
-                    NavigationLink { EditorView(note: note) } label: {
-                        NoteRow(note: note)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
     }
 }
 

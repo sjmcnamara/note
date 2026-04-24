@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.5.2] — 2026-04-24
+
+### Added
+- Swipe-to-delete on timeline rows — trailing `.swipeActions` with `allowsFullSwipe`; tap the trash, or full-swipe, to delete. Animation on removal.
+
+### Changed
+- Timeline switched from `LazyVStack` + custom `DaySection` to plain `List` with `Section` headers. Row background, separator tint (`Color.noteRule`), and separator leading inset (24pt) overridden so the custom look is preserved.
+- Onboarding footer copy: "Built on Nostr." → "Built on Nostr. An open protocol."
+- About footer copy: "Powered by Nostr · open protocol" → "Built on Nostr. An open protocol."
+- `MARKETING_VERSION` bumped to 0.5.2, `CURRENT_PROJECT_VERSION` to 2.
+
+---
+
 ## [0.5.1] — 2026-04-24
 
 ### Added

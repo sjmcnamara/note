@@ -200,7 +200,7 @@ struct SecondaryActionLink: View {
 
 struct PoweredByNostrFooter: View {
     var body: some View {
-        Text("Built on Nostr.")
+        Text("Built on Nostr. An open protocol.")
             .font(NoteFont.caption)
             .foregroundStyle(Color.noteInkMute)
             .frame(maxWidth: .infinity)
