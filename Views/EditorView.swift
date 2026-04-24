@@ -275,7 +275,7 @@ private struct BodyField: View {
 
     var body: some View {
         TextEditor(text: $text)
-            .font(.custom("Inter Tight", size: 15 + CGFloat(textSizeStep * 2)))
+            .font(.custom("Inter Tight", size: 15 + CGFloat(textSizeStep * 3)))
             .foregroundStyle(Color.noteInk)
             .tint(Color.noteInk)
             .scrollContentBackground(.hidden)
@@ -283,6 +283,7 @@ private struct BodyField: View {
             .frame(minHeight: 120)
             .textContentType(.none)
             .padding(.bottom, Space.sectionGap)
+            .id(textSizeStep)
     }
 }
 
@@ -334,13 +335,13 @@ private struct TodoRow: View {
                 onEdit()
             } label: {
                 Text(todo.done ? "▪" : "▢")
-                    .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep * 2)))
+                    .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep * 3)))
                     .foregroundStyle(todo.done ? Color.noteInkDim : Color.noteInkMute)
             }
             .buttonStyle(.plain)
 
             TextField("", text: $todo.text)
-                .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep * 2)))
+                .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep * 3)))
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)

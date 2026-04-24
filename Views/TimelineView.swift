@@ -271,7 +271,7 @@ private struct NoteRow: View {
 
                 if !note.body.isEmpty {
                     Text(note.body)
-                        .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep * 2)))
+                        .font(.custom("Inter Tight", size: 14 + CGFloat(textSizeStep * 3)))
                         .foregroundStyle(Color.noteInkDim)
                         .lineLimit(2)
                 }
