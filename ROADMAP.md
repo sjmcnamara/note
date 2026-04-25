@@ -92,15 +92,14 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Fix: tapping "Use this key" replaced the identity but left the user on `KeyImportView`. `KeyImportView` now dismisses itself first, then defers `onImported` by ~350 ms so the chain unwinds back through `AdvancedSetupView` to `AdvancedSettingsView`.
 - `AdvancedSettingsView` shows a transient "Identity updated" toast when the npub changes mid-session — covers both Generate and Import flows.
 
+### [0.9.0] Screen 8 — Empty state
+- `EmptyTimelineView` shown by `TimelineView` when `notes.isEmpty`. Header + compose bar stay visible; TagStrip hidden.
+- Centered hero (10pt ink dot + "A quiet place, **ready.**" with the last word in Instrument Serif italic), sub-copy, two bordered CTAs.
+- Start a note → existing `createNote` flow. Record a voice memo → toast stub (full recording + transcription deferred).
+
 ---
 
 ## Up next
-
-### Screen 8 — Empty state
-- `EmptyTimelineView` when note count == 0
-- Compose bar still floating
-- Hero "A quiet place, ready." with "ready." in italic serif
-- Two CTA rows: Start a note, Record a voice memo
 
 ### Screen 9 — Tag filter
 - Pushed from long-press on a tag or Search's "See all in …" row
