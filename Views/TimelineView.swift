@@ -69,23 +69,28 @@ struct TimelineView: View {
             ZStack(alignment: .bottom) {
                 VStack(spacing: 0) {
                     TimelineHeader(showSearch: $showSearch)
-                    TagStrip(tags: tags, activeTag: $activeTag)
 
-                    List {
-                        ForEach(makeGroups(filtered)) { group in
-                            Section {
-                                ForEach(group.notes) { note in
-                                    noteRow(note)
+                    if notes.isEmpty {
+                        EmptyTimelineView(onStartNote: createNote)
+                    } else {
+                        TagStrip(tags: tags, activeTag: $activeTag)
+
+                        List {
+                            ForEach(makeGroups(filtered)) { group in
+                                Section {
+                                    ForEach(group.notes) { note in
+                                        noteRow(note)
+                                    }
+                                } header: {
+                                    dayHeader(group.label)
                                 }
-                            } header: {
-                                dayHeader(group.label)
                             }
                         }
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .environment(\.defaultMinListHeaderHeight, 0)
+                        .contentMargins(.bottom, 96, for: .scrollContent)
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .environment(\.defaultMinListHeaderHeight, 0)
-                    .contentMargins(.bottom, 96, for: .scrollContent)
                 }
 
                 TimelineComposeBar(onCreate: createNote)

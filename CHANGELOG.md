@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.9.0] — 2026-04-25
+
+### Added
+- Screen 8 — Empty state: `EmptyTimelineView` shown by `TimelineView` when `notes.isEmpty`
+- Centered hero (10pt ink dot above "A quiet place, ready." with "ready." in Instrument Serif italic 24pt) + sub-copy + two bordered CTAs (Start a note, Record a voice memo)
+- Start a note → calls existing `createNote` flow (insert + push EditorView)
+- Record a voice memo → transient toast stub ("Voice memos land later.") — full recording + transcription flow deferred
+- TimelineHeader stays visible; TagStrip is hidden in the empty state (nothing to filter)
+- TimelineComposeBar still floats at the bottom
+
+### Changed
+- `MARKETING_VERSION` 0.9.0, `CURRENT_PROJECT_VERSION` 7
+
+---
+
 ## [0.8.1] — 2026-04-25
 
 ### Fixed
