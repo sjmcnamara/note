@@ -9,6 +9,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.8.0] — 2026-04-25
+
+### Added
+- Screen 7 — Key import: full implementation replacing stub
+- `NsecValidator` — pure helper that trims input, parses with `Keys.parse(secretKey:)`, and returns `.empty / .valid(npub:publicKeyHex:) / .invalid`. Used by the import flow to derive npub before commit.
+- `KeyImportView`: paste field (monospace 13pt, multi-line), "or" divider, QR scan row (toast stub), `DerivedKeyCard` revealed on valid input with avatar + npub + green-dot "Key is valid", inline note on invalid input. Bottom action bar: Cancel + Use this key (filled, disabled until valid). 180ms debounce on validation.
+- Confirm path calls `IdentityService.importKey(nsec:)` and propagates back through Advanced setup's completion callback (same chain as Generate).
+- **First test target.** `NOTETests` bundle with `NsecValidatorTests` covering empty / valid / whitespace-tolerant / npub-instead-of-nsec / garbled / truncated / `isValid` helper. Tests use `Keys.generate()` to round-trip rather than hard-coded vectors.
+
+### Changed
+- `MARKETING_VERSION` 0.8.0, `CURRENT_PROJECT_VERSION` 5.
+
+---
+
 ## [0.7.0] — 2026-04-24
 
 ### Added

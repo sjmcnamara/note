@@ -56,7 +56,7 @@ struct AdvancedSetupView: View {
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(isPresented: $showImport) {
-            KeyImportView()
+            KeyImportView(onImported: handleCompleted)
         }
     }
 
@@ -67,11 +67,15 @@ struct AdvancedSetupView: View {
             await identityService.regenerate()
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             busy = false
-            if let onComplete {
-                onComplete()
-            } else {
-                dismiss()
-            }
+            handleCompleted()
+        }
+    }
+
+    private func handleCompleted() {
+        if let onComplete {
+            onComplete()
+        } else {
+            dismiss()
         }
     }
 
