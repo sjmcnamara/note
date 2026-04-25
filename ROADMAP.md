@@ -71,16 +71,30 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Recommended variant on Generate: 1.5pt `noteInk` border + `recommended` badge
 - Onboarding gains secondary "Advanced setup" link → sheet-presents `AdvancedSetupView` in its own NavigationStack
 
+### [0.7.0] Real Nostr identity
+- First non-UI release. Adds `rust-nostr/nostr-sdk-swift` (`from: 0.44.2`) as SPM dep
+- `IdentityService` (`@MainActor ObservableObject`) — auto-generates on first launch, parses stored nsec thereafter. Rust FFI runs off main on cold start
+- `KeychainService` + `SecureStorage` protocol (ported from whistle, trimmed) — nsec stored Keychain-only, `kSecAttrAccessibleWhenUnlocked`
+- `NostrIdentity` turned from protocol into public struct (npub + publicKeyHex). nsec never on the identity object
+- Advanced setup → Generate now actually mints a fresh keypair and overwrites the Keychain entry
+- Settings → Advanced → nsec Reveal reads real bech32 nsec from Keychain after FaceID, auto-hides after 30 s
+- Removed: `MockIdentity`, `UnsignedEvent`, `SignedEvent`, unused `signEvent(_:)`
+- Open: regenerate confirm dialog (deferred until first export path lands)
+
+### [0.8.0] Screen 7 — Key import
+- Full implementation replacing stub: monospace paste field, "or" divider, QR scan row (toast stub), `DerivedKeyCard` on valid input, bottom Cancel + Use this key actions
+- `NsecValidator` pure helper — trims input, parses with NostrSDK, returns `.empty / .valid / .invalid` with derived npub + pubkey hex
+- 180 ms debounce on validation as the user types/pastes
+- Confirm path: `IdentityService.importKey(nsec:)` → propagates back through Advanced setup's completion callback (same as Generate)
+- **First test target.** `NOTETests` bundle (added to `project.yml`) with `NsecValidatorTests` covering empty / valid / whitespace / npub-as-nsec / garbled / truncated. Tests round-trip via `Keys.generate()` rather than hard-coded vectors.
+
+### [0.8.1] Key import nav fix + identity-updated toast
+- Fix: tapping "Use this key" replaced the identity but left the user on `KeyImportView`. `KeyImportView` now dismisses itself first, then defers `onImported` by ~350 ms so the chain unwinds back through `AdvancedSetupView` to `AdvancedSettingsView`.
+- `AdvancedSettingsView` shows a transient "Identity updated" toast when the npub changes mid-session — covers both Generate and Import flows.
+
 ---
 
 ## Up next
-
-### Screen 7 — Key import
-- Paste field with monospace text + blinking caret
-- QR row → placeholder scanner
-- `DerivedKeyCard` appears on valid input only
-- bech32 parse + checksum validation
-- Unit tests for the validator (required before shipping)
 
 ### Screen 8 — Empty state
 - `EmptyTimelineView` when note count == 0

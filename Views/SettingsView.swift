@@ -3,13 +3,15 @@ import SwiftUI
 // MARK: - SettingsView
 
 struct SettingsView: View {
-    var identity: any NostrIdentity = MockIdentity()
+    @EnvironmentObject private var identityService: IdentityService
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.sectionGap) {
                 SettingsNavBar()
-                IdentityRow(identity: identity)
+                if let identity = identityService.identity {
+                    IdentityRow(identity: identity)
+                }
                 AppearancePicker()
                 TextSizeRow()
                 NavCard()
@@ -54,14 +56,8 @@ private struct SettingsNavBar: View {
 // MARK: - Identity row
 
 private struct IdentityRow: View {
-    let identity: any NostrIdentity
+    let identity: NostrIdentity
     @State private var copyConfirmed = false
-
-    private var shortNpub: String {
-        let n = identity.npub
-        guard n.count > 16 else { return n }
-        return String(n.prefix(12)) + "…" + String(n.suffix(4))
-    }
 
     var body: some View {
         HStack(spacing: Space.l) {
@@ -71,7 +67,7 @@ private struct IdentityRow: View {
                 Text("Public key · npub")
                     .font(NoteFont.captionS)
                     .foregroundStyle(Color.noteInkMute)
-                Text(shortNpub)
+                Text(identity.shortNpub)
                     .font(.system(.caption, design: .monospaced))
                     .foregroundStyle(Color.noteInkDim)
                     .lineLimit(1)
@@ -252,8 +248,10 @@ private struct NavCard: View {
 // MARK: - Preview
 
 #Preview {
-    NavigationStack {
+    let preview = IdentityService(storage: InMemorySecureStorage())
+    return NavigationStack {
         SettingsView()
     }
     .environmentObject(AppSettings.shared)
+    .environmentObject(preview)
 }

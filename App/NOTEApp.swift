@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct NOTEApp: App {
     @State private var container: ModelContainer?
+    @StateObject private var identityService = IdentityService()
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -14,14 +15,18 @@ struct NOTEApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if let container {
+            if let container, identityService.identity != nil {
                 ContentView()
                     .modelContainer(container)
                     .environmentObject(AppSettings.shared)
+                    .environmentObject(identityService)
             } else {
                 Color.noteBg
                     .ignoresSafeArea()
-                    .task { container = Self.openStore() }
+                    .task {
+                        if container == nil { container = Self.openStore() }
+                        if identityService.identity == nil { await identityService.initialise() }
+                    }
             }
         }
         .onChange(of: scenePhase) { _, phase in

@@ -9,6 +9,55 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.8.1] — 2026-04-25
+
+### Fixed
+- Key import: tapping "Use this key" left the user stuck on `KeyImportView` even though the identity was replaced. `dismiss()` from `AdvancedSetupView`'s level was a no-op while `KeyImportView` was on top. `KeyImportView` now dismisses itself first, then defers the parent's `onImported` callback by ~350 ms so the navigation chain unwinds cleanly back to `AdvancedSettingsView`.
+
+### Added
+- `AdvancedSettingsView` shows a transient "Identity updated" toast when the npub changes mid-session (covers both Generate and Import flows). Baseline npub captured on first appear; toast only fires on subsequent changes.
+
+### Changed
+- `MARKETING_VERSION` 0.8.1, `CURRENT_PROJECT_VERSION` 6.
+
+---
+
+## [0.8.0] — 2026-04-25
+
+### Added
+- Screen 7 — Key import: full implementation replacing stub
+- `NsecValidator` — pure helper that trims input, parses with `Keys.parse(secretKey:)`, and returns `.empty / .valid(npub:publicKeyHex:) / .invalid`. Used by the import flow to derive npub before commit.
+- `KeyImportView`: paste field (monospace 13pt, multi-line), "or" divider, QR scan row (toast stub), `DerivedKeyCard` revealed on valid input with avatar + npub + green-dot "Key is valid", inline note on invalid input. Bottom action bar: Cancel + Use this key (filled, disabled until valid). 180ms debounce on validation.
+- Confirm path calls `IdentityService.importKey(nsec:)` and propagates back through Advanced setup's completion callback (same chain as Generate).
+- **First test target.** `NOTETests` bundle with `NsecValidatorTests` covering empty / valid / whitespace-tolerant / npub-instead-of-nsec / garbled / truncated / `isValid` helper. Tests use `Keys.generate()` to round-trip rather than hard-coded vectors.
+
+### Changed
+- `MARKETING_VERSION` 0.8.0, `CURRENT_PROJECT_VERSION` 5.
+
+---
+
+## [0.7.0] — 2026-04-24
+
+### Added
+- **Real Nostr identity.** First non-UI release. Replaces `MockIdentity` with a real keypair generated via [`rust-nostr/nostr-sdk-swift`](https://github.com/rust-nostr/nostr-sdk-swift) (pinned `from: 0.44.2`).
+- `IdentityService` — `@MainActor ObservableObject` that auto-generates a keypair on first launch (Rust FFI runs off main to keep the splash responsive), parses the stored nsec on subsequent launches, and exposes `regenerate()`, `importKey(nsec:)`, and `exportNsec()` for user-initiated flows. Injected app-wide via `@EnvironmentObject`.
+- `KeychainService` + `SecureStorage` protocol ported (trimmed) from `whistle`. nsec stored with `kSecAttrAccessibleWhenUnlocked`, Keychain-only (no UserDefaults fallback). `InMemorySecureStorage` included for previews/tests.
+- Advanced setup → Generate now actually destroys the current key and mints a new pair (via `IdentityService.regenerate()`), success haptic, dismiss.
+- Settings → Advanced → nsec Reveal reads the real bech32 nsec from Keychain via `IdentityService.exportNsec()` after FaceID challenge; auto-hides after 30 s as before.
+
+### Changed
+- `NostrIdentity` converted from protocol to public struct (`npub` + `publicKeyHex` only). The secret key never appears on the identity object — it lives only in Keychain.
+- `UnsignedEvent` / `SignedEvent` / `signEvent(_:)` removed. Event signing will come from `nostr-sdk-swift`'s `Keys` when we publish.
+- `MockIdentity` removed. Previews use `NostrIdentity.preview` or `IdentityService(storage: InMemorySecureStorage())`.
+- Onboarding "Start writing" no longer calls a mock generator — identity is created at app init.
+- README stack line updated; `MARKETING_VERSION` 0.7.0, `CURRENT_PROJECT_VERSION` 4.
+
+### Notes
+- Regenerating keys from Settings is destructive and currently one-tap — a confirm dialog is worth a follow-up.
+- Bech32 validator + tests still land with Screen 7 (Key import).
+
+---
+
 ## [0.6.0] — 2026-04-24
 
 ### Added
