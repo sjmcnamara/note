@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.8.1] — 2026-04-25
+
+### Fixed
+- Key import: tapping "Use this key" left the user stuck on `KeyImportView` even though the identity was replaced. `dismiss()` from `AdvancedSetupView`'s level was a no-op while `KeyImportView` was on top. `KeyImportView` now dismisses itself first, then defers the parent's `onImported` callback by ~350 ms so the navigation chain unwinds cleanly back to `AdvancedSettingsView`.
+
+### Added
+- `AdvancedSettingsView` shows a transient "Identity updated" toast when the npub changes mid-session (covers both Generate and Import flows). Baseline npub captured on first appear; toast only fires on subsequent changes.
+
+### Changed
+- `MARKETING_VERSION` 0.8.1, `CURRENT_PROJECT_VERSION` 6.
+
+---
+
 ## [0.8.0] — 2026-04-25
 
 ### Added

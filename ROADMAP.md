@@ -88,6 +88,10 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Confirm path: `IdentityService.importKey(nsec:)` → propagates back through Advanced setup's completion callback (same as Generate)
 - **First test target.** `NOTETests` bundle (added to `project.yml`) with `NsecValidatorTests` covering empty / valid / whitespace / npub-as-nsec / garbled / truncated. Tests round-trip via `Keys.generate()` rather than hard-coded vectors.
 
+### [0.8.1] Key import nav fix + identity-updated toast
+- Fix: tapping "Use this key" replaced the identity but left the user on `KeyImportView`. `KeyImportView` now dismisses itself first, then defers `onImported` by ~350 ms so the chain unwinds back through `AdvancedSetupView` to `AdvancedSettingsView`.
+- `AdvancedSettingsView` shows a transient "Identity updated" toast when the npub changes mid-session — covers both Generate and Import flows.
+
 ---
 
 ## Up next
