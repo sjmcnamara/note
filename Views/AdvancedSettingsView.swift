@@ -70,7 +70,7 @@ private struct IdentityCard: View {
             IdentityAvatar(npub: identity.npub)
 
             VStack(alignment: .leading, spacing: Space.xs) {
-                Text("Public key · npub")
+                Text("Public key (npub)")
                     .font(NoteFont.captionS)
                     .foregroundStyle(Color.noteInkMute)
 
@@ -102,7 +102,7 @@ private struct IdentityCard: View {
             }
 
             VStack(alignment: .leading, spacing: Space.xs) {
-                Text("nsec")
+                Text("Secret key (nsec)")
                     .font(NoteFont.captionS)
                     .foregroundStyle(Color.noteInkMute)
 
