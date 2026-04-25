@@ -73,7 +73,15 @@ struct KeyImportView: View {
         do {
             try identityService.importKey(nsec: nsec.trimmingCharacters(in: .whitespacesAndNewlines))
             UINotificationFeedbackGenerator().notificationOccurred(.success)
-            if let onImported { onImported() } else { dismiss() }
+            // Pop KeyImport first; defer parent dismissal until the pop animation
+            // settles so the chain unwinds cleanly back to AdvancedSettings.
+            dismiss()
+            if let onImported {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(350))
+                    onImported()
+                }
+            }
         } catch {
             showToast("Couldn't import key. Check the nsec and try again.")
         }

@@ -7,22 +7,70 @@ struct AdvancedSettingsView: View {
     @EnvironmentObject private var identityService: IdentityService
     var backup: MockBackup = MockBackup()
     @State private var revealNsec = false
+    @State private var baselineNpub: String?
+    @State private var toastMessage: String?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Space.sectionGap) {
-                AdvancedNavBar()
-                if let identity = identityService.identity {
-                    IdentityCard(identity: identity, revealNsec: $revealNsec)
+        ZStack(alignment: .top) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.sectionGap) {
+                    AdvancedNavBar()
+                    if let identity = identityService.identity {
+                        IdentityCard(identity: identity, revealNsec: $revealNsec)
+                    }
+                    PrivateBackupCard(backup: backup)
+                    KeyActionsCard()
                 }
-                PrivateBackupCard(backup: backup)
-                KeyActionsCard()
+                .padding(.horizontal, Space.gutterH)
+                .padding(.bottom, Space.sectionGap * 2)
             }
-            .padding(.horizontal, Space.gutterH)
-            .padding(.bottom, Space.sectionGap * 2)
+
+            if let toastMessage {
+                Toast(message: toastMessage)
+                    .padding(.horizontal, Space.gutterH)
+                    .padding(.top, Space.m)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            if baselineNpub == nil { baselineNpub = identityService.identity?.npub }
+        }
+        .onChange(of: identityService.identity?.npub) { _, new in
+            guard let new, let baseline = baselineNpub, new != baseline else { return }
+            baselineNpub = new
+            showToast("Identity updated")
+        }
+    }
+
+    private func showToast(_ message: String) {
+        withAnimation(.spring(duration: 0.25)) { toastMessage = message }
+        Task {
+            try? await Task.sleep(for: .seconds(2.5))
+            withAnimation(.easeOut(duration: 0.2)) { toastMessage = nil }
+        }
+    }
+}
+
+// MARK: - Toast
+
+private struct Toast: View {
+    let message: String
+
+    var body: some View {
+        Text(message)
+            .font(NoteFont.captionS)
+            .foregroundStyle(Color.noteInk)
+            .padding(.horizontal, Space.l)
+            .padding(.vertical, Space.m)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.m))
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.m)
+                    .strokeBorder(Color.noteRule, lineWidth: 1)
+            )
+            .composeShadow()
     }
 }
 
