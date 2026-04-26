@@ -9,6 +9,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.10.0] — 2026-04-26
+
+### Added
+- Screen 9 — Tag filter: new `TagFilterView` reachable via long-press on a tag chip in `TimelineView` (medium haptic on long-press)
+- 32pt Instrument Serif italic header of the tag name
+- Meta line: `N notes · since <d MMMM> · rename` (rename underlined, opens an inline `Alert` with a `TextField`; saving rewrites the tag across all matching notes and pops back)
+- Related-tag strip ("often with: …") — top 6 co-occurring tags by frequency, tap pushes a nested `TagFilterView`
+- Week-grouped feed: `This week`, `Last week`, then month name (or `MMMM yyyy` for older years). Swipe-to-delete on rows
+- `⋯` menu offers Rename and Delete tag (confirmation dialog; Delete tag strips the label from every note but preserves their content)
+- `@Query(filter:)` uses `#Predicate { $0.tags.contains(tag) }` so the filter runs in SwiftData
+
+### Changed
+- `MARKETING_VERSION` 0.10.0, `CURRENT_PROJECT_VERSION` 8
+- `TimelineView`'s `TagStrip` now takes an `onLongPress` callback — tap still toggles the inline filter, long-press pushes to the dedicated `TagFilterView`
+
+---
+
 ## [0.9.0] — 2026-04-25
 
 ### Added

@@ -97,16 +97,17 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Centered hero (10pt ink dot + "A quiet place, **ready.**" with the last word in Instrument Serif italic), sub-copy, two bordered CTAs.
 - Start a note → existing `createNote` flow. Record a voice memo → toast stub (full recording + transcription deferred).
 
+### [0.10.0] Screen 9 — Tag filter
+- New `TagFilterView` reachable via long-press on a TagStrip chip (medium haptic). Tap still toggles the inline Timeline filter.
+- 32pt Instrument Serif italic header, meta `"N notes · since <date> · rename"`, "often with:" related-tag strip (top 6 by co-occurrence)
+- Week-grouped feed: `This week` / `Last week` / month name. Swipe-to-delete rows
+- `⋯` menu: Rename (Alert + TextField, rewrites globally + pops back) and Delete tag (confirmation dialog, strips the label from every note)
+- `@Query(filter:)` with `#Predicate { $0.tags.contains(tag) }` — filtering happens in SwiftData
+- Open: rename republishing affected notes once real backup lands, merge-into-other-tag flow (deferred)
+
 ---
 
 ## Up next
-
-### Screen 9 — Tag filter
-- Pushed from long-press on a tag or Search's "See all in …" row
-- Big italic serif tag name header
-- Related tag strip inline
-- Feed grouped by week
-- Rename applies globally; triggers republish if backup on (no-op with MockBackup)
 
 ### Screen 10 — Share & export
 - Bottom sheet from Editor share icon

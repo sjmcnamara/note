@@ -44,6 +44,7 @@ struct TimelineView: View {
     @State private var showSearch = false
     @State private var composeNote: Note?
     @State private var editingNote: Note?
+    @State private var pinnedTag: String?
 
     private let defaultTags = ["work", "daily", "ideas", "reading", "dreams"]
 
@@ -73,7 +74,7 @@ struct TimelineView: View {
                     if notes.isEmpty {
                         EmptyTimelineView(onStartNote: createNote)
                     } else {
-                        TagStrip(tags: tags, activeTag: $activeTag)
+                        TagStrip(tags: tags, activeTag: $activeTag) { pinnedTag = $0 }
 
                         List {
                             ForEach(makeGroups(filtered)) { group in
@@ -104,6 +105,9 @@ struct TimelineView: View {
             }
             .navigationDestination(item: $editingNote) { note in
                 EditorView(note: note)
+            }
+            .navigationDestination(item: $pinnedTag) { tag in
+                TagFilterView(tag: tag)
             }
             .overlay {
                 if showSearch {
@@ -215,6 +219,7 @@ private struct IconTile: View {
 private struct TagStrip: View {
     let tags: [String]
     @Binding var activeTag: String?
+    let onLongPress: (String) -> Void
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -225,6 +230,10 @@ private struct TagStrip: View {
                 ForEach(tags, id: \.self) { tag in
                     TagChip(label: tag, active: activeTag == tag) {
                         activeTag = (activeTag == tag) ? nil : tag
+                    }
+                    .onLongPressGesture(minimumDuration: 0.4) {
+                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                        onLongPress(tag)
                     }
                 }
             }
@@ -253,6 +262,7 @@ private struct TagChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("filter: \(label)")
+        .accessibilityHint("Long-press to open the tag's dedicated view")
     }
 }
 
