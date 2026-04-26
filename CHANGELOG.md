@@ -9,6 +9,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.10.1] — 2026-04-27
+
+### Fixed
+- Editor body / phantom checklist bug: re-opening a note with multi-line body sometimes left the bottom half blank or showed an empty "To do" overlay. Two underlying causes addressed:
+  - `BodyField` now uses `.scrollDisabled(true)` and a generous `minHeight: 360`, so the `TextEditor` grows with content inside the outer `ScrollView` instead of getting capped at 120pt and scrolling internally.
+  - Empty `TodoItem`s are now pruned in `EditorView.onDisappear`, so a stray "Todo" toolbar tap doesn't haunt the next open as a blank checklist row.
+- Title now strips newlines (Return + paste) and blurs focus on Return — no more multi-line titles. `lineLimit(1...3)` still allows visual wrapping for long titles.
+- `addTodo()` skips inserting a new blank when the trailing todo is already empty (prevents stacking empties via repeated toolbar taps or Return-on-empty).
+
+### Added
+- Per-tag delete in the Editor: each tag chip now has a small `×` button that removes it from the note's tag array.
+
+### Changed
+- `MARKETING_VERSION` 0.10.1, `CURRENT_PROJECT_VERSION` 9.
+
+---
+
 ## [0.10.0] — 2026-04-26
 
 ### Added

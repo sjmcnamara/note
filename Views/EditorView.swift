@@ -55,6 +55,10 @@ struct EditorView: View {
         }
         .onDisappear {
             saveTask?.cancel()
+            // Prune blank todos so they don't render as a phantom checklist on re-open.
+            let blanks = note.todos.filter { $0.text.isEmpty }
+            note.todos.removeAll { $0.text.isEmpty }
+            for item in blanks { modelContext.delete(item) }
             if isNew && isEmpty {
                 modelContext.delete(note)
             }
@@ -90,6 +94,8 @@ struct EditorView: View {
     }
 
     private func addTodo() {
+        // Avoid stacking empties: if the trailing todo is already blank, do nothing.
+        if note.todos.last?.text.isEmpty == true { return }
         let item = TodoItem(text: "")
         modelContext.insert(item)
         note.todos.append(item)
@@ -184,9 +190,21 @@ private struct TitleField: View {
                 .foregroundStyle(focused || title.isEmpty ? Color.noteInk : Color.clear)
                 .tint(Color.noteInk)
                 .focused($focused)
-                .lineLimit(1...6)
+                .lineLimit(1...3)
                 .textContentType(.none)
+                .submitLabel(.done)
                 .onAppear { if title.isEmpty { focused = true } }
+                .onChange(of: title) { _, new in
+                    // Title is logically single-line. Strip any newlines (Return / paste)
+                    // and blur on Return so the keyboard's "done" feels right.
+                    if new.contains("\n") || new.contains("\r") {
+                        title = new
+                            .replacingOccurrences(of: "\r\n", with: "")
+                            .replacingOccurrences(of: "\n", with: "")
+                            .replacingOccurrences(of: "\r", with: "")
+                        focused = false
+                    }
+                }
 
             // Decorative overlay — non-interactive so taps fall through to the TextField
             if !focused && !title.isEmpty {
@@ -225,9 +243,22 @@ private struct TagsRow: View {
     var body: some View {
         HStack(spacing: Space.base) {
             ForEach(tags, id: \.self) { tag in
-                Text(tag)
-                    .font(NoteFont.caption)
-                    .foregroundStyle(Color.noteInkDim)
+                HStack(spacing: 3) {
+                    Text(tag)
+                        .font(NoteFont.caption)
+                        .foregroundStyle(Color.noteInkDim)
+                    Button {
+                        tags.removeAll { $0 == tag }
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(Color.noteInkMute)
+                            .frame(width: 16, height: 16)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Remove \(tag) tag")
+                }
             }
 
             if addingTag {
@@ -273,13 +304,18 @@ private struct BodyField: View {
     @Binding var text: String
 
     var body: some View {
+        // The outer ScrollView in EditorView handles scrolling. TextEditor's
+        // internal scroll is disabled so its frame grows with content; the
+        // floor is generous enough that an empty/short note still feels open
+        // to type into without phantom whitespace below.
         TextEditor(text: $text)
             .font(Font.custom("Inter Tight", size: 15, relativeTo: .body))
             .foregroundStyle(Color.noteInk)
             .tint(Color.noteInk)
             .scrollContentBackground(.hidden)
+            .scrollDisabled(true)
             .lineSpacing(9)
-            .frame(minHeight: 120)
+            .frame(minHeight: 360, alignment: .top)
             .textContentType(.none)
             .padding(.bottom, Space.sectionGap)
     }
