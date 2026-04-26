@@ -40,10 +40,10 @@ private func makeGroups(_ notes: [Note]) -> [DayGroup] {
 struct TimelineView: View {
     @Query(sort: \Note.createdAt, order: .reverse) private var notes: [Note]
     @Environment(\.modelContext) private var modelContext
-    @State private var activeTag: String? = nil
     @State private var showSearch = false
     @State private var composeNote: Note?
     @State private var editingNote: Note?
+    @State private var pinnedTag: String?
 
     private let defaultTags = ["work", "daily", "ideas", "reading", "dreams"]
 
@@ -51,11 +51,6 @@ struct TimelineView: View {
         var seen = Set(defaultTags)
         let extra = notes.flatMap(\.tags).filter { seen.insert($0).inserted }
         return defaultTags + extra
-    }
-
-    private var filtered: [Note] {
-        guard let t = activeTag else { return notes }
-        return notes.filter { $0.tags.contains(t) }
     }
 
     private func createNote() {
@@ -73,10 +68,10 @@ struct TimelineView: View {
                     if notes.isEmpty {
                         EmptyTimelineView(onStartNote: createNote)
                     } else {
-                        TagStrip(tags: tags, activeTag: $activeTag)
+                        TagStrip(tags: tags) { pinnedTag = $0 }
 
                         List {
-                            ForEach(makeGroups(filtered)) { group in
+                            ForEach(makeGroups(notes)) { group in
                                 Section {
                                     ForEach(group.notes) { note in
                                         noteRow(note)
@@ -104,6 +99,9 @@ struct TimelineView: View {
             }
             .navigationDestination(item: $editingNote) { note in
                 EditorView(note: note)
+            }
+            .navigationDestination(item: $pinnedTag) { tag in
+                TagFilterView(tag: tag)
             }
             .overlay {
                 if showSearch {
@@ -214,18 +212,13 @@ private struct IconTile: View {
 
 private struct TagStrip: View {
     let tags: [String]
-    @Binding var activeTag: String?
+    let onTap: (String) -> Void
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 14) {
-                TagChip(label: "all", active: activeTag == nil) {
-                    activeTag = nil
-                }
                 ForEach(tags, id: \.self) { tag in
-                    TagChip(label: tag, active: activeTag == tag) {
-                        activeTag = (activeTag == tag) ? nil : tag
-                    }
+                    TagChip(label: tag) { onTap(tag) }
                 }
             }
             .padding(.horizontal, Space.gutterH)
@@ -236,23 +229,17 @@ private struct TagStrip: View {
 
 private struct TagChip: View {
     let label: String
-    let active: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 3) {
-                Text(label)
-                    .font(NoteFont.bodyS)
-                    .foregroundStyle(active ? Color.noteInk : Color.noteInkMute)
-
-                Rectangle()
-                    .fill(active ? Color.noteInk : Color.clear)
-                    .frame(height: 2)
-            }
+            Text(label)
+                .font(NoteFont.bodyS)
+                .foregroundStyle(Color.noteInkMute)
+                .padding(.vertical, 3)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("filter: \(label)")
+        .accessibilityLabel("Open \(label) tag")
     }
 }
 
