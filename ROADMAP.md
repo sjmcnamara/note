@@ -98,12 +98,12 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Start a note → existing `createNote` flow. Record a voice memo → toast stub (full recording + transcription deferred).
 
 ### [0.10.0] Screen 9 — Tag filter
-- New `TagFilterView` reachable via long-press on a TagStrip chip (medium haptic). Tap still toggles the inline Timeline filter.
+- New `TagFilterView` reachable via tap on any TagStrip chip in Timeline. Inline tap-to-filter and the `all` reset chip removed; `TagFilterView` covers that ground and Search handles free-text filtering.
 - 32pt Instrument Serif italic header, meta `"N notes · since <date> · rename"`, "often with:" related-tag strip (top 6 by co-occurrence)
 - Week-grouped feed: `This week` / `Last week` / month name. Swipe-to-delete rows
 - `⋯` menu: Rename (Alert + TextField, rewrites globally + pops back) and Delete tag (confirmation dialog, strips the label from every note)
 - `@Query(filter:)` with `#Predicate { $0.tags.contains(tag) }` — filtering happens in SwiftData
-- Open: rename republishing affected notes once real backup lands, merge-into-other-tag flow (deferred)
+- Open: rename republishing affected notes once real backup lands, merge-into-other-tag flow (deferred), revisit tap-vs-long-press once a real device is available
 
 ---
 
