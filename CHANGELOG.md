@@ -9,6 +9,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.11.0] — 2026-04-27
+
+### Added
+- **CI suite** ported from `whistle` (trimmed to iOS-only):
+  - `.github/workflows/ci.yml` — iOS build & test on `macos-15`, Codecov upload (flag `ios`), SwiftLint `--strict`, dependency review on PRs
+  - `.github/workflows/codeql.yml` — Swift static analysis on push/PR + Mondays 08:00 UTC
+  - `.github/workflows/scorecard.yml` — OpenSSF Scorecard, Mondays 06:00 UTC
+- `scripts/build.sh` — local equivalent of CI; detects newest available iPhone simulator, runs `build` / `test` / `clean`
+- `.swiftlint.yml` — lenient starter config (force-unwrapping, line-length, etc. disabled for now)
+- README badges (CI, CodeQL, Scorecard, iOS coverage) + a CI section
+- New unit tests (existing `NsecValidatorTests` plus four new suites; 30 tests total):
+  - `IdentityServiceTests` — fresh-storage generation, restore-from-existing-nsec, regenerate, importKey valid + invalid, exportNsec
+  - `TimelineGroupingTests` — Today / Yesterday / weekday / day-month labels with a fixed `now`
+  - `TagWeekGroupingTests` — This week / Last week / month-name / month-with-year, ordering, collocation
+  - `NoteModelTests` — cascade-delete on `Note.todos`, default values
+
+### Changed
+- **`makeGroups` and `makeWeekGroups` extracted** from `Views/TimelineView.swift` and `Views/TagFilterView.swift` into a new `Domain/` source folder (added to `project.yml` sources). Both helpers now take an injectable `now: Date = Date()` so tests can pin time.
+- `MARKETING_VERSION` 0.11.0, `CURRENT_PROJECT_VERSION` 10.
+
+---
+
 ## [0.10.1] — 2026-04-27
 
 ### Fixed

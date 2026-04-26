@@ -111,6 +111,13 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Fix: title accepted Return / multi-line input. Newlines are now stripped and focus drops on Return. Visual wrap kept (lineLimit 1...3).
 - Per-tag delete in the Editor — small `×` on each tag chip.
 
+### [0.11.0] DevEx — CI, scripts, more tests
+- CI ported from `whistle`: `ci.yml` (iOS build+test, SwiftLint, dependency review), `codeql.yml` (Swift, weekly), `scorecard.yml` (OpenSSF, weekly)
+- `scripts/build.sh` mirrors CI locally (`build` / `test` / `clean`)
+- `.swiftlint.yml` lenient starter; README gains CI/CodeQL/Scorecard/iOS-coverage badges
+- `makeGroups` / `makeWeekGroups` extracted to a new `Domain/` source folder, both with injectable `now` so tests pin time
+- Unit tests grow from 7 → 30 across `IdentityServiceTests`, `TimelineGroupingTests`, `TagWeekGroupingTests`, `NoteModelTests`, plus existing `NsecValidatorTests`
+
 ---
 
 ## Up next

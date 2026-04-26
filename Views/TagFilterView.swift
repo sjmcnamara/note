@@ -238,42 +238,6 @@ private struct RelatedTagStrip: View {
     }
 }
 
-// MARK: - Week grouping
-
-struct WeekGroup: Identifiable {
-    let id = UUID()
-    let label: String
-    let notes: [Note]
-}
-
-private func makeWeekGroups(_ notes: [Note]) -> [WeekGroup] {
-    let cal = Calendar.current
-    let now = Date()
-    let weekStart = cal.dateInterval(of: .weekOfYear, for: now)?.start ?? now
-    let lastWeekStart = cal.date(byAdding: .day, value: -7, to: weekStart) ?? weekStart
-
-    let monthFmt = DateFormatter(); monthFmt.dateFormat = "MMMM"
-    let monthYearFmt = DateFormatter(); monthYearFmt.dateFormat = "MMMM yyyy"
-    let nowYear = cal.component(.year, from: now)
-
-    func bucketLabel(for date: Date) -> String {
-        if date >= weekStart { return "This week" }
-        if date >= lastWeekStart { return "Last week" }
-        let dateYear = cal.component(.year, from: date)
-        return dateYear == nowYear ? monthFmt.string(from: date) : monthYearFmt.string(from: date)
-    }
-
-    // Stable order: walk notes (already sorted desc) and accumulate buckets in order seen.
-    var order: [String] = []
-    var byLabel: [String: [Note]] = [:]
-    for note in notes {
-        let label = bucketLabel(for: note.createdAt)
-        if byLabel[label] == nil { order.append(label) }
-        byLabel[label, default: []].append(note)
-    }
-    return order.map { WeekGroup(label: $0, notes: byLabel[$0] ?? []) }
-}
-
 // MARK: - Week section + row
 
 private struct WeekSection: View {
