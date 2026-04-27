@@ -369,10 +369,18 @@ private struct BodyField: View {
 private struct MarkdownPreview: View {
     let text: String
 
-    // .font() on Text(AttributedString) overrides the bold/italic runs set by the parser.
-    // Apply font at Group level (environment) so it acts as a fallback for unstyled runs only.
+    // Markdown treats a single \n as a space; users write with single newlines.
+    // Normalize: protect existing blank lines, then double all remaining \n so each
+    // line becomes its own paragraph (giving block elements like # the blank line they need).
+    private var normalizedText: String {
+        text
+            .replacingOccurrences(of: "\n\n", with: "\u{E000}")
+            .replacingOccurrences(of: "\n", with: "\n\n")
+            .replacingOccurrences(of: "\u{E000}", with: "\n\n")
+    }
+
     private var attributed: AttributedString {
-        (try? AttributedString(markdown: text)) ?? AttributedString(text)
+        (try? AttributedString(markdown: normalizedText)) ?? AttributedString(text)
     }
 
     var body: some View {
@@ -381,12 +389,15 @@ private struct MarkdownPreview: View {
                 Text("Nothing to preview.")
                     .foregroundStyle(Color.noteInkMute)
             } else {
+                // Use system font (not Inter Tight) so the markdown renderer can find the
+                // bold/italic/heading variants. Custom font families don't register separate
+                // PostScript names for each weight, so SwiftUI can't apply bold/italic to them
+                // via AttributedString attributes.
                 Text(attributed)
                     .foregroundStyle(Color.noteInk)
                     .tint(Color.noteInk)
             }
         }
-        .font(NoteFont.body)
         .lineSpacing(9)
         .frame(maxWidth: .infinity, minHeight: 360, alignment: .topLeading)
         .padding(.bottom, Space.sectionGap)
