@@ -3,7 +3,7 @@
 [![CI](https://github.com/sjmcnamara/note/actions/workflows/ci.yml/badge.svg)](https://github.com/sjmcnamara/note/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/sjmcnamara/note/actions/workflows/codeql.yml/badge.svg)](https://github.com/sjmcnamara/note/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sjmcnamara/note/badge)](https://scorecard.dev/viewer/?uri=github.com/sjmcnamara/note)
-[![iOS](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fcodecov.io%2Fapi%2Fv2%2Fgithub%2Fsjmcnamara%2Frepos%2Fnote%2Freport%3Fflag%3Dios&query=%24.totals.coverage&suffix=%25&label=iOS&color=brightgreen)](https://app.codecov.io/gh/sjmcnamara/note?flags%5B0%5D=ios)
+[![codecov](https://codecov.io/gh/sjmcnamara/note/graph/badge.svg)](https://codecov.io/gh/sjmcnamara/note)
 
 **Status:** v0.12.0 — Editor rev 2 (formatting toolbar, markdown preview, tag collapse)
 
