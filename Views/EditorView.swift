@@ -369,38 +369,65 @@ private struct BodyField: View {
 private struct MarkdownPreview: View {
     let text: String
 
-    // Markdown treats a single \n as a space; users write with single newlines.
-    // Normalize: protect existing blank lines, then double all remaining \n so each
-    // line becomes its own paragraph (giving block elements like # the blank line they need).
-    private var normalizedText: String {
-        text
-            .replacingOccurrences(of: "\n\n", with: "\u{E000}")
-            .replacingOccurrences(of: "\n", with: "\n\n")
-            .replacingOccurrences(of: "\u{E000}", with: "\n\n")
-    }
-
-    private var attributed: AttributedString {
-        (try? AttributedString(markdown: normalizedText)) ?? AttributedString(text)
-    }
-
     var body: some View {
-        Group {
+        VStack(alignment: .leading, spacing: 0) {
             if text.isEmpty {
                 Text("Nothing to preview.")
+                    .font(NoteFont.body)
                     .foregroundStyle(Color.noteInkMute)
             } else {
-                // Use system font (not Inter Tight) so the markdown renderer can find the
-                // bold/italic/heading variants. Custom font families don't register separate
-                // PostScript names for each weight, so SwiftUI can't apply bold/italic to them
-                // via AttributedString attributes.
-                Text(attributed)
-                    .foregroundStyle(Color.noteInk)
-                    .tint(Color.noteInk)
+                ForEach(Array(text.components(separatedBy: "\n").enumerated()), id: \.offset) { _, line in
+                    lineView(for: line)
+                }
             }
         }
-        .lineSpacing(9)
         .frame(maxWidth: .infinity, minHeight: 360, alignment: .topLeading)
         .padding(.bottom, Space.sectionGap)
+    }
+
+    @ViewBuilder
+    private func lineView(for line: String) -> some View {
+        if line.hasPrefix("# ") {
+            Text(inlineAttr(String(line.dropFirst(2))))
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color.noteInk)
+                .padding(.top, 8)
+                .padding(.bottom, 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else if line.hasPrefix("## ") {
+            Text(inlineAttr(String(line.dropFirst(3))))
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.noteInk)
+                .padding(.top, 6)
+                .padding(.bottom, 2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else if line.hasPrefix("- ") {
+            HStack(alignment: .top, spacing: 8) {
+                Text("•")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Color.noteInk)
+                Text(inlineAttr(String(line.dropFirst(2))))
+                    .font(.system(size: 15))
+                    .foregroundStyle(Color.noteInk)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 2)
+        } else if line.isEmpty {
+            Spacer().frame(height: 14)
+        } else {
+            Text(inlineAttr(line))
+                .font(.system(size: 15))
+                .foregroundStyle(Color.noteInk)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 1)
+        }
+    }
+
+    // Parses only inline markdown (bold, italic) — block-level handled above per line.
+    private func inlineAttr(_ string: String) -> AttributedString {
+        var opts = AttributedString.MarkdownParsingOptions()
+        opts.interpretedSyntax = .inlineOnly
+        return (try? AttributedString(markdown: string, options: opts)) ?? AttributedString(string)
     }
 }
 
