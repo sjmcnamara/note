@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.12.0] — 2026-04-27
+
+### Added
+- **Formatting toolbar** pinned above the keyboard (`ToolbarItemGroup(placement: .keyboard)`): **B** (bold), **I** (italic), **H1**, **H2**, bullet list, and todo buttons. Word count displayed on the left.
+- **Markdown preview toggle** — eye icon in the top bar switches between edit mode (TextEditor) and a rendered preview (`Text(AttributedString(markdown:))`). Bold, italic, headings, and lists render in preview.
+- **Tag collapse** — notes with more than 4 tags show the first 4 plus a "…+N" chip; tapping expands to show all.
+
+### Changed
+- Removed static bottom `EditorToolBar` (replaced by keyboard toolbar).
+- `MARKETING_VERSION` 0.12.0, `CURRENT_PROJECT_VERSION` 11.
+
+---
+
 ## [0.11.0] — 2026-04-27
 
 ### Added

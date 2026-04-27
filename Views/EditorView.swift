@@ -8,6 +8,7 @@ struct EditorView: View {
     var isNew: Bool = false
     @State private var saving = false
     @State private var saveTask: Task<Void, Never>?
+    @State private var showPreview = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -22,32 +23,46 @@ struct EditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            EditorTopBar(saving: saving, onBack: { dismiss() }, onShare: {})
+            EditorTopBar(saving: saving, showPreview: $showPreview, onBack: { dismiss() }, onShare: {})
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     EditorTimestamp(date: note.createdAt)
                     TitleField(title: $note.title)
                     TagsRow(tags: $note.tags)
-                    BodyField(text: $note.body)
-                    if !note.todos.isEmpty {
-                        TodoSection(note: note, onEdit: markEdited, onAddTodo: addTodo)
+
+                    if showPreview {
+                        MarkdownPreview(text: note.body)
+                    } else {
+                        BodyField(text: $note.body)
+                        if !note.todos.isEmpty {
+                            TodoSection(note: note, onEdit: markEdited, onAddTodo: addTodo)
+                        }
                     }
                 }
                 .padding(.horizontal, 26)
                 .padding(.top, 12)
                 .padding(.bottom, 80)
             }
-
-            EditorToolBar(
-                wordCount: wordCount,
-                onHeading: { insert("## ") },
-                onList: { insert("- ") },
-                onTodo: { addTodo() }
-            )
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Text(wordCount == 1 ? "1 word" : "\(wordCount) words")
+                    .font(NoteFont.captionS)
+                    .foregroundStyle(Color.noteInkMute)
+
+                Spacer()
+
+                FormatBtn(label: "B", bold: true) { wrapBody("**") }
+                FormatBtn(label: "I", italic: true) { wrapBody("*") }
+                FormatBtn(label: "H1") { insert("# ") }
+                FormatBtn(label: "H2") { insert("## ") }
+                FormatBtn(systemName: "list.bullet") { insert("- ") }
+                FormatBtn(systemName: "checkmark.square") { addTodo() }
+            }
+        }
         .onChange(of: note.title) { _, _ in markEdited() }
         .onChange(of: note.body) { _, _ in markEdited() }
         .onChange(of: scenePhase) { _, phase in
@@ -55,7 +70,6 @@ struct EditorView: View {
         }
         .onDisappear {
             saveTask?.cancel()
-            // Prune blank todos so they don't render as a phantom checklist on re-open.
             let blanks = note.todos.filter { $0.text.isEmpty }
             note.todos.removeAll { $0.text.isEmpty }
             for item in blanks { modelContext.delete(item) }
@@ -88,12 +102,18 @@ struct EditorView: View {
         }
     }
 
+    // Inserts a block-level prefix (heading, bullet) on a new line.
     private func insert(_ prefix: String) {
         note.body += note.body.isEmpty ? prefix : "\n" + prefix
     }
 
+    // Appends an inline marker pair with a placeholder word the user replaces.
+    private func wrapBody(_ marker: String) {
+        let separator = note.body.isEmpty ? "" : "\n"
+        note.body += separator + marker + "text" + marker
+    }
+
     private func addTodo() {
-        // Avoid stacking empties: if the trailing todo is already blank, do nothing.
         if note.todos.last?.text.isEmpty == true { return }
         let item = TodoItem(text: "")
         modelContext.insert(item)
@@ -106,6 +126,7 @@ struct EditorView: View {
 
 private struct EditorTopBar: View {
     let saving: Bool
+    @Binding var showPreview: Bool
     let onBack: () -> Void
     let onShare: () -> Void
 
@@ -130,6 +151,18 @@ private struct EditorTopBar: View {
                     .frame(width: 6, height: 6)
                     .scaleEffect(saving ? 1.4 : 1.0)
                     .animation(.spring(duration: 0.3), value: saving)
+
+                Button {
+                    withAnimation(.easeInOut(duration: Motion.toggleSwap)) {
+                        showPreview.toggle()
+                    }
+                } label: {
+                    Image(systemName: showPreview ? "eye.fill" : "eye")
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundStyle(showPreview ? Color.noteInk : Color.noteInkDim)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(showPreview ? "Edit mode" : "Preview mode")
 
                 Button(action: onShare) {
                     Image(systemName: "square.and.arrow.up")
@@ -183,7 +216,6 @@ private struct TitleField: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            // Always in the hierarchy so focus state is never lost on re-render
             TextField("", text: $title, axis: .vertical)
                 .font(NoteFont.display)
                 .foregroundStyle(focused || title.isEmpty ? Color.noteInk : Color.clear)
@@ -194,8 +226,6 @@ private struct TitleField: View {
                 .submitLabel(.done)
                 .onAppear { if title.isEmpty { focused = true } }
                 .onChange(of: title) { _, new in
-                    // Title is logically single-line. Strip any newlines (Return / paste)
-                    // and blur on Return so the keyboard's "done" feels right.
                     if new.contains("\n") || new.contains("\r") {
                         title = new
                             .replacingOccurrences(of: "\r\n", with: "")
@@ -205,7 +235,6 @@ private struct TitleField: View {
                     }
                 }
 
-            // Decorative overlay — non-interactive so taps fall through to the TextField
             if !focused && !title.isEmpty {
                 styledTitle.allowsHitTesting(false)
             }
@@ -214,7 +243,6 @@ private struct TitleField: View {
         .padding(.bottom, Space.l)
     }
 
-    // Last word in Instrument Serif italic; rest in Inter Tight 26/500
     private var styledTitle: some View {
         let words = title.components(separatedBy: " ")
         let last  = words.last ?? ""
@@ -238,10 +266,18 @@ private struct TagsRow: View {
     @State private var addingTag = false
     @State private var draft = ""
     @FocusState private var tagFieldFocused: Bool
+    @State private var expanded = false
+
+    private static let collapseThreshold = 4
+
+    private var visibleTags: [String] {
+        guard !expanded && tags.count > Self.collapseThreshold else { return tags }
+        return Array(tags.prefix(Self.collapseThreshold))
+    }
 
     var body: some View {
         HStack(spacing: Space.base) {
-            ForEach(tags, id: \.self) { tag in
+            ForEach(visibleTags, id: \.self) { tag in
                 HStack(spacing: 3) {
                     Text(tag)
                         .font(NoteFont.caption)
@@ -258,6 +294,18 @@ private struct TagsRow: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Remove \(tag) tag")
                 }
+            }
+
+            if !expanded && tags.count > Self.collapseThreshold {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) { expanded = true }
+                } label: {
+                    Text("…+\(tags.count - Self.collapseThreshold)")
+                        .font(NoteFont.caption)
+                        .foregroundStyle(Color.noteInkMute)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Show \(tags.count - Self.collapseThreshold) more tags")
             }
 
             if addingTag {
@@ -303,10 +351,6 @@ private struct BodyField: View {
     @Binding var text: String
 
     var body: some View {
-        // The outer ScrollView in EditorView handles scrolling. TextEditor's
-        // internal scroll is disabled so its frame grows with content; the
-        // floor is generous enough that an empty/short note still feels open
-        // to type into without phantom whitespace below.
         TextEditor(text: $text)
             .font(Font.custom("Inter Tight", size: 15, relativeTo: .body))
             .foregroundStyle(Color.noteInk)
@@ -317,6 +361,37 @@ private struct BodyField: View {
             .frame(minHeight: 360, alignment: .top)
             .textContentType(.none)
             .padding(.bottom, Space.sectionGap)
+    }
+}
+
+// MARK: - Markdown preview
+
+private struct MarkdownPreview: View {
+    let text: String
+
+    var body: some View {
+        Group {
+            if text.isEmpty {
+                Text("Nothing to preview.")
+                    .font(NoteFont.body)
+                    .foregroundStyle(Color.noteInkMute)
+            } else if let attr = try? AttributedString(
+                markdown: text,
+                options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+            ) {
+                Text(attr)
+                    .font(NoteFont.body)
+                    .foregroundStyle(Color.noteInk)
+                    .tint(Color.noteInk)
+            } else {
+                Text(text)
+                    .font(NoteFont.body)
+                    .foregroundStyle(Color.noteInk)
+            }
+        }
+        .lineSpacing(9)
+        .frame(maxWidth: .infinity, minHeight: 360, alignment: .topLeading)
+        .padding(.bottom, Space.sectionGap)
     }
 }
 
@@ -392,48 +467,33 @@ private struct TodoRow: View {
     }
 }
 
-// MARK: - Bottom toolbar
+// MARK: - Format button (keyboard toolbar)
 
-private struct EditorToolBar: View {
-    let wordCount: Int
-    let onHeading: () -> Void
-    let onList: () -> Void
-    let onTodo: () -> Void
-
-    var body: some View {
-        HStack {
-            Text("\(wordCount) words")
-                .font(NoteFont.captionS)
-                .foregroundStyle(Color.noteInkMute)
-
-            Spacer()
-
-            HStack(spacing: Space.xs) {
-                ToolBtn(systemName: "textformat", action: onHeading)
-                ToolBtn(systemName: "list.bullet", action: onList)
-                ToolBtn(systemName: "checkmark.square", action: onTodo)
-            }
-            .padding(.horizontal, Space.m)
-            .padding(.vertical, Space.s)
-            .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.pill))
-        }
-        .padding(.horizontal, Space.gutterH)
-        .padding(.bottom, 22)
-        .frame(height: 44)
-        .background(Color.noteBg)
-    }
-}
-
-private struct ToolBtn: View {
-    let systemName: String
+private struct FormatBtn: View {
+    var label: String?
+    var systemName: String?
+    var bold: Bool = false
+    var italic: Bool = false
     let action: () -> Void
+
+    private var labelFont: Font {
+        let base = Font.system(size: 14, weight: bold ? .bold : .regular)
+        return italic ? base.italic() : base
+    }
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemName)
-                .font(.system(size: 14, weight: .regular))
-                .foregroundStyle(Color.noteInkDim)
-                .frame(width: 28, height: 28)
+            if let sys = systemName {
+                Image(systemName: sys)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundStyle(Color.noteInkDim)
+                    .frame(width: 28, height: 28)
+            } else if let lbl = label {
+                Text(lbl)
+                    .font(labelFont)
+                    .foregroundStyle(Color.noteInkDim)
+                    .frame(width: 28, height: 28)
+            }
         }
         .buttonStyle(.plain)
     }

@@ -111,6 +111,12 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Fix: title accepted Return / multi-line input. Newlines are now stripped and focus drops on Return. Visual wrap kept (lineLimit 1...3).
 - Per-tag delete in the Editor — small `×` on each tag chip.
 
+### [0.12.0] Editor rev 2 — formatting toolbar, markdown preview, tag collapse
+- `ToolbarItemGroup(placement: .keyboard)`: B / I / H1 / H2 / bullet / todo buttons + word count, pinned above keyboard
+- Read/edit markdown preview toggle (eye icon in top bar) using `Text(AttributedString(markdown:))`
+- Tag collapse: >4 tags → show first 4 + "…+N" expand chip
+- Removed static bottom `EditorToolBar`
+
 ### [0.11.0] DevEx — CI, scripts, more tests
 - CI ported from `whistle`: `ci.yml` (iOS build+test, SwiftLint, dependency review), `codeql.yml` (Swift, weekly), `scorecard.yml` (OpenSSF, weekly)
 - `scripts/build.sh` mirrors CI locally (`build` / `test` / `clean`)
@@ -121,6 +127,14 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 ---
 
 ## Up next
+
+### [0.13.0] App lock (FaceID gate)
+- Port `AppLockService` from whistle — biometric-first with device-passcode fallback
+- "Lock with FaceID" toggle in Basic Settings (default OFF)
+- Lock overlay at `ContentView` root; blocks until `evaluatePolicy` succeeds
+
+### [0.14.0] Architecture review (doc)
+- `docs/architecture/backup.md` — compare relay vs file-export vs hybrid; land a decision
 
 ### Screen 10 — Share & export
 - Bottom sheet from Editor share icon
