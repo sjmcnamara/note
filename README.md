@@ -61,8 +61,4 @@ note/
 
 `./scripts/build.sh test` reproduces what CI runs locally.
 
-## Design
-
-Hybrid-2 — quiet minimalism. Off-white canvas, near-black ink. One humanist sans (Inter Tight) throughout. One italic serif moment per screen (Instrument Serif italic). No chrome.
-
 Full spec in `handoff_claude_code/` (local only, not committed).
