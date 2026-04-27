@@ -29,10 +29,24 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
+      - name: Cache Homebrew tools
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a  # v4
+        with:
+          path: ~/Library/Caches/Homebrew/downloads
+          key: brew-${{ runner.os }}-xcodegen-swiftlint
+
       - name: Generate Xcode project
         run: |
           brew install xcodegen
           xcodegen generate
+
+      - name: Cache SPM packages
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a  # v4
+        with:
+          path: .spm-packages
+          key: spm-${{ runner.os }}-${{ hashFiles('project.yml') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
 
       - name: Build & Test
         run: |
@@ -41,6 +55,7 @@ jobs:
             -scheme NOTE \
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -only-testing:NOTETests \
+            -clonedSourcePackagesDirPath .spm-packages \
             -resultBundlePath TestResults.xcresult \
             -enableCodeCoverage YES \
             | xcpretty --color || true
@@ -73,6 +88,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - name: Cache Homebrew tools
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a  # v4
+        with:
+          path: ~/Library/Caches/Homebrew/downloads
+          key: brew-${{ runner.os }}-xcodegen-swiftlint
       - name: Install SwiftLint
         run: brew install swiftlint
       - name: Lint
