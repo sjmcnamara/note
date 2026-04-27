@@ -30,7 +30,7 @@ struct AboutView: View {
                 VStack(spacing: 0) {
                     infoRow(label: "Version", value: version)
                     Rectangle().fill(Color.noteRule).frame(height: 1)
-                    infoRow(label: "Build",   value: build)
+                    infoRow(label: "Build", value: build)
                 }
 
                 Text("Built on Nostr. An open protocol.")

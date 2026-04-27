@@ -22,7 +22,7 @@ struct EmptyTimelineView: View {
 
                 VStack(spacing: Space.base) {
                     EmptyCTA(systemIcon: "plus", label: "Start a note", action: onStartNote)
-                    EmptyCTA(systemIcon: "mic",  label: "Record a voice memo") {
+                    EmptyCTA(systemIcon: "mic", label: "Record a voice memo") {
                         showToast("Voice memos land later.")
                     }
                 }

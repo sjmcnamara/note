@@ -1,40 +1,6 @@
 import SwiftUI
 import SwiftData
 
-// MARK: - Grouping
-
-private struct DayGroup: Identifiable {
-    let id = UUID()
-    let label: String
-    let notes: [Note]
-}
-
-private func makeGroups(_ notes: [Note]) -> [DayGroup] {
-    let cal = Calendar.current
-    let today     = cal.startOfDay(for: Date())
-    let yesterday = cal.date(byAdding: .day, value: -1, to: today)!
-    let weekStart = cal.date(byAdding: .day, value: -6, to: today)!
-
-    let weekdayFmt = DateFormatter(); weekdayFmt.dateFormat = "EEEE"
-    let dateFmt    = DateFormatter(); dateFmt.dateFormat   = "d MMMM"
-
-    let byDay = Dictionary(grouping: notes) { cal.startOfDay(for: $0.createdAt) }
-
-    return byDay.keys.sorted(by: >).map { day in
-        let label: String
-        if cal.isDate(day, inSameDayAs: today) {
-            label = "Today"
-        } else if cal.isDate(day, inSameDayAs: yesterday) {
-            label = "Yesterday"
-        } else if day >= weekStart {
-            label = weekdayFmt.string(from: day)
-        } else {
-            label = dateFmt.string(from: day)
-        }
-        return DayGroup(label: label, notes: byDay[day]!.sorted { $0.createdAt > $1.createdAt })
-    }
-}
-
 // MARK: - TimelineView
 
 struct TimelineView: View {

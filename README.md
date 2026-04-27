@@ -1,6 +1,11 @@
 # NO.TE
 
-**Status:** v0.10.0 — Screen 9 (Tag filter)
+[![CI](https://github.com/sjmcnamara/note/actions/workflows/ci.yml/badge.svg)](https://github.com/sjmcnamara/note/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/sjmcnamara/note/actions/workflows/codeql.yml/badge.svg)](https://github.com/sjmcnamara/note/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sjmcnamara/note/badge)](https://scorecard.dev/viewer/?uri=github.com/sjmcnamara/note)
+[![iOS](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fcodecov.io%2Fapi%2Fv2%2Fgithub%2Fsjmcnamara%2Frepos%2Fnote%2Freport%3Fflag%3Dios&query=%24.totals.coverage&suffix=%25&label=iOS&color=brightgreen)](https://app.codecov.io/gh/sjmcnamara/note?flags%5B0%5D=ios)
+
+**Status:** v0.11.0 — DevEx (CI + scripts + tests)
 
 A private, local-first note app for iPhone. Notes stay on your device. Nostr provides identity and optional encrypted backup — nothing is shared unless you ask for it.
 
@@ -23,7 +28,8 @@ brew install xcodegen
 ```bash
 git clone git@github.com:sjmcnamara/note.git
 cd note
-xcodegen generate
+./scripts/build.sh        # generate + build
+./scripts/build.sh test   # generate + build + test
 open NOTE.xcodeproj
 ```
 
@@ -36,12 +42,24 @@ note/
 ├── App/          Entry point
 ├── Views/        Screen views
 ├── Design/       Token system (colors, type, spacing)
-├── Nostr/        Protocol stubs and mocks
+├── Domain/       Pure helpers (grouping, etc.) — testable
+├── Nostr/        Identity service, Keychain, validators, models
+├── Tests/        XCTest unit tests
 ├── Assets.xcassets/  Adaptive color assets
 ├── Fonts/        Inter Tight (variable) + Instrument Serif Italic
+├── scripts/      build.sh (build / test / clean)
+├── .github/workflows/  CI, CodeQL, Scorecard
 ├── project.yml   xcodegen source of truth
 └── CHANGELOG.md
 ```
+
+## CI
+
+- **CI** — iOS build + test on every PR & push to master, SwiftLint `--strict`, dependency review on PRs.
+- **CodeQL** — Swift static analysis on push, PR, and weekly.
+- **OpenSSF Scorecard** — supply-chain hygiene check, weekly.
+
+`./scripts/build.sh test` reproduces what CI runs locally.
 
 ## Design
 

@@ -48,12 +48,12 @@ enum NoteFont {
 
 enum Space {
     static let xxs: CGFloat = 2
-    static let xs:  CGFloat = 4
-    static let s:   CGFloat = 6
-    static let m:   CGFloat = 8
+    static let xs: CGFloat = 4
+    static let s: CGFloat = 6
+    static let m: CGFloat = 8
     static let base: CGFloat = 10
-    static let l:   CGFloat = 12
-    static let xl:  CGFloat = 14
+    static let l: CGFloat = 12
+    static let xl: CGFloat = 14
     static let xxl: CGFloat = 18
     static let gutterH: CGFloat = 24
     static let sectionGap: CGFloat = 22
@@ -62,10 +62,10 @@ enum Space {
 // MARK: - Radius
 
 enum Radius {
-    static let s:   CGFloat = 6
-    static let m:   CGFloat = 8
-    static let l:   CGFloat = 10
-    static let xl:  CGFloat = 12
+    static let s: CGFloat = 6
+    static let m: CGFloat = 8
+    static let l: CGFloat = 10
+    static let xl: CGFloat = 12
     static let xxl: CGFloat = 14
     static let pill: CGFloat = 99
     static let sheet: CGFloat = 22
@@ -77,7 +77,7 @@ extension View {
     func composeShadow() -> some View {
         self
             .shadow(color: .black.opacity(0.08), radius: 14, x: 0, y: 8)
-            .shadow(color: .black.opacity(0.04), radius: 3,  x: 0, y: 2)
+            .shadow(color: .black.opacity(0.04), radius: 3, x: 0, y: 2)
     }
 
     func sheetShadow() -> some View {
@@ -98,4 +98,3 @@ enum Motion {
     static let toggleSwap: Double = 0.2
     static let sheetPresent: Double = 0.3
 }
-

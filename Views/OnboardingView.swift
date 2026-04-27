@@ -78,7 +78,7 @@ private struct OnboardingHero: View {
         VStack(alignment: .leading, spacing: Space.xs) {
             // Added \n\n for paragraph look and bumped size to 44
             Text("Own your own words.")
-                .font(NoteFont.italic(40)) 
+                .font(NoteFont.italic(40))
                 .foregroundStyle(Color.noteInk)
                 .minimumScaleFactor(0.9)
                 .multilineTextAlignment(.leading) // Keeps the "words" left-aligned
@@ -121,7 +121,7 @@ struct ProofPoint {
             icon: "lock.shield",
             title: "Encrypted",
             body: "Secure your backup with a key only you control — then restore your notes on any new device."
-        ),
+        )
     ]
 }
 
@@ -177,7 +177,7 @@ struct PrimaryActionButton: View {
         }
         .buttonStyle(.plain)
         // Center the button since it's no longer full-width
-        .frame(maxWidth: .infinity, alignment: .center) 
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 }
 struct OPrimaryActionButton: View {

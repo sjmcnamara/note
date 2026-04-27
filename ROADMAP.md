@@ -105,6 +105,19 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - `@Query(filter:)` with `#Predicate { $0.tags.contains(tag) }` — filtering happens in SwiftData
 - Open: rename republishing affected notes once real backup lands, merge-into-other-tag flow (deferred), revisit tap-vs-long-press once a real device is available
 
+### [0.10.1] Editor bug-fix patch
+- Fix: `BodyField` capped at 120pt inside an outer `ScrollView`, so re-opening a multi-line note clipped content. Now `scrollDisabled(true)` + `minHeight: 360`.
+- Fix: phantom blank checklist after a stray Todo toolbar tap. Empty `TodoItem`s are pruned on `onDisappear`; `addTodo()` no longer stacks empties.
+- Fix: title accepted Return / multi-line input. Newlines are now stripped and focus drops on Return. Visual wrap kept (lineLimit 1...3).
+- Per-tag delete in the Editor — small `×` on each tag chip.
+
+### [0.11.0] DevEx — CI, scripts, more tests
+- CI ported from `whistle`: `ci.yml` (iOS build+test, SwiftLint, dependency review), `codeql.yml` (Swift, weekly), `scorecard.yml` (OpenSSF, weekly)
+- `scripts/build.sh` mirrors CI locally (`build` / `test` / `clean`)
+- `.swiftlint.yml` lenient starter; README gains CI/CodeQL/Scorecard/iOS-coverage badges
+- `makeGroups` / `makeWeekGroups` extracted to a new `Domain/` source folder, both with injectable `now` so tests pin time
+- Unit tests grow from 7 → 30 across `IdentityServiceTests`, `TimelineGroupingTests`, `TagWeekGroupingTests`, `NoteModelTests`, plus existing `NsecValidatorTests`
+
 ---
 
 ## Up next

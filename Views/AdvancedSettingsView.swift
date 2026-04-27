@@ -261,7 +261,7 @@ struct IdentityAvatar: View {
                         Color(hue: hue, saturation: 0.55, brightness: 0.90),
                         Color(hue: (hue + 0.33).truncatingRemainder(dividingBy: 1), saturation: 0.55, brightness: 0.90),
                         Color(hue: (hue + 0.67).truncatingRemainder(dividingBy: 1), saturation: 0.55, brightness: 0.90),
-                        Color(hue: hue, saturation: 0.55, brightness: 0.90),
+                        Color(hue: hue, saturation: 0.55, brightness: 0.90)
                     ],
                     center: .center
                 )
