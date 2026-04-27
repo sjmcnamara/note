@@ -30,7 +30,7 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
       - name: Cache Homebrew tools
-        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a  # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: ~/Library/Caches/Homebrew/downloads
           key: brew-${{ runner.os }}-xcodegen-swiftlint
@@ -41,7 +41,7 @@ jobs:
           xcodegen generate
 
       - name: Cache SPM packages
-        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a  # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: .spm-packages
           key: spm-${{ runner.os }}-${{ hashFiles('project.yml') }}
@@ -89,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       - name: Cache Homebrew tools
-        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a  # v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: ~/Library/Caches/Homebrew/downloads
           key: brew-${{ runner.os }}-xcodegen-swiftlint
