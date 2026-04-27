@@ -39,17 +39,34 @@ jobs:
           xcodebuild test \
             -project NOTE.xcodeproj \
             -scheme NOTE \
-            -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
             -only-testing:NOTETests \
             -resultBundlePath TestResults.xcresult \
             -enableCodeCoverage YES \
             | xcpretty --color || true
 
+      - name: Convert coverage to LCOV
+        run: |
+          xcrun xccov view --report --json TestResults.xcresult > coverage.json
+          python3 -c "
+          import json, sys
+          data = json.load(open('coverage.json'))
+          out = open('lcov.info', 'w')
+          for target in data.get('targets', []):
+              for f in target.get('files', []):
+                  out.write(f\"SF:{f['path']}\n\")
+                  for func in f.get('functions', []):
+                      out.write(f\"FN:{func['lineNumber']},{func['name']}\n\")
+                      out.write(f\"FNDA:{func['executionCount']},{func['name']}\n\")
+                  for line in f.get('lines', []):
+                      out.write(f\"DA:{line['line']},{line['executionCount']}\n\")
+                  out.write('end_of_record\n')
+          "
+
       - uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe  # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          xcode: true
-          xcode_archive_path: TestResults.xcresult
+          files: lcov.info
           flags: ios
           fail_ci_if_error: false
 
