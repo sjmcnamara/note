@@ -7,7 +7,9 @@ struct TagFilterView: View {
     let tag: String
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @Query private var notes: [Note]
+    // [String] is stored as Transformable in SwiftData — #Predicate cannot filter it at the
+    // SQL level. Fetch all notes and filter in memory instead.
+    @Query(sort: \Note.createdAt, order: .reverse) private var allNotes: [Note]
 
     @State private var showRename = false
     @State private var renameDraft = ""
@@ -17,8 +19,10 @@ struct TagFilterView: View {
 
     init(tag: String) {
         self.tag = tag
-        let predicate = #Predicate<Note> { $0.tags.contains(tag) }
-        self._notes = Query(filter: predicate, sort: \Note.createdAt, order: .reverse)
+    }
+
+    private var notes: [Note] {
+        allNotes.filter { $0.tags.contains(tag) }
     }
 
     var body: some View {
