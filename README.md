@@ -60,5 +60,3 @@ note/
 - **OpenSSF Scorecard** — supply-chain hygiene check, weekly.
 
 `./scripts/build.sh test` reproduces what CI runs locally.
-
-Full spec in `handoff_claude_code/` (local only, not committed).
