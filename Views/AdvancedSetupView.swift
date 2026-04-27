@@ -149,7 +149,7 @@ private struct SubText: View {
 private struct OptionRow: View {
     let title: String
     let caption: String
-    var badge: String? = nil
+    var badge: String?
     var recommended: Bool = false
     let action: () -> Void
 

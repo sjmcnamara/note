@@ -42,15 +42,15 @@ struct EditorView: View {
             EditorToolBar(
                 wordCount: wordCount,
                 onHeading: { insert("## ") },
-                onList:    { insert("- ") },
-                onTodo:    { addTodo() }
+                onList: { insert("- ") },
+                onTodo: { addTodo() }
             )
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .onChange(of: note.title)  { _, _ in markEdited() }
-        .onChange(of: note.body)   { _, _ in markEdited() }
-        .onChange(of: scenePhase)  { _, phase in
+        .onChange(of: note.title) { _, _ in markEdited() }
+        .onChange(of: note.body) { _, _ in markEdited() }
+        .onChange(of: scenePhase) { _, phase in
             if phase == .background { persist() }
         }
         .onDisappear {
@@ -67,8 +67,7 @@ struct EditorView: View {
     }
 
     private func persist() {
-        do { try modelContext.save() }
-        catch { print("EditorView save error: \(error)") }
+        do { try modelContext.save() } catch { print("EditorView save error: \(error)") }
     }
 
     private func markEdited() {
@@ -163,7 +162,7 @@ private struct EditorTimestamp: View {
 
     private var dayLabel: String {
         let cal = Calendar.current
-        if cal.isDateInToday(date)     { return "Today" }
+        if cal.isDateInToday(date) { return "Today" }
         if cal.isDateInYesterday(date) { return "Yesterday" }
         let f = DateFormatter(); f.dateFormat = "EEEE"; return f.string(from: date)
     }
@@ -398,8 +397,8 @@ private struct TodoRow: View {
 private struct EditorToolBar: View {
     let wordCount: Int
     let onHeading: () -> Void
-    let onList:    () -> Void
-    let onTodo:    () -> Void
+    let onList: () -> Void
+    let onTodo: () -> Void
 
     var body: some View {
         HStack {
@@ -410,8 +409,8 @@ private struct EditorToolBar: View {
             Spacer()
 
             HStack(spacing: Space.xs) {
-                ToolBtn(systemName: "textformat",       action: onHeading)
-                ToolBtn(systemName: "list.bullet",      action: onList)
+                ToolBtn(systemName: "textformat", action: onHeading)
+                ToolBtn(systemName: "list.bullet", action: onList)
                 ToolBtn(systemName: "checkmark.square", action: onTodo)
             }
             .padding(.horizontal, Space.m)
@@ -452,7 +451,7 @@ private struct ToolBtn: View {
         todos: [
             TodoItem(text: "Finalize launch copy w/ M"),
             TodoItem(text: "Rev pricing tiers — send to S"),
-            TodoItem(text: "Cancel 2pm", done: true),
+            TodoItem(text: "Cancel 2pm", done: true)
         ]
     )
     container.mainContext.insert(note)
