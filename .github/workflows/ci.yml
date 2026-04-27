@@ -45,14 +45,11 @@ jobs:
             -enableCodeCoverage YES \
             | xcpretty --color || true
 
-      - name: Generate coverage report
-        run: |
-          xcrun xccov view --report --json TestResults.xcresult > coverage.json
-
       - uses: codecov/codecov-action@75cd11691c0faa626561e295848008c8a7dddffe  # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.json
+          xcode: true
+          xcode_archive_path: TestResults.xcresult
           flags: ios
           fail_ci_if_error: false
 
