@@ -369,26 +369,24 @@ private struct BodyField: View {
 private struct MarkdownPreview: View {
     let text: String
 
+    // .font() on Text(AttributedString) overrides the bold/italic runs set by the parser.
+    // Apply font at Group level (environment) so it acts as a fallback for unstyled runs only.
+    private var attributed: AttributedString {
+        (try? AttributedString(markdown: text)) ?? AttributedString(text)
+    }
+
     var body: some View {
         Group {
             if text.isEmpty {
                 Text("Nothing to preview.")
-                    .font(NoteFont.body)
                     .foregroundStyle(Color.noteInkMute)
-            } else if let attr = try? AttributedString(
-                markdown: text,
-                options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-            ) {
-                Text(attr)
-                    .font(NoteFont.body)
+            } else {
+                Text(attributed)
                     .foregroundStyle(Color.noteInk)
                     .tint(Color.noteInk)
-            } else {
-                Text(text)
-                    .font(NoteFont.body)
-                    .foregroundStyle(Color.noteInk)
             }
         }
+        .font(NoteFont.body)
         .lineSpacing(9)
         .frame(maxWidth: .infinity, minHeight: 360, alignment: .topLeading)
         .padding(.bottom, Space.sectionGap)
