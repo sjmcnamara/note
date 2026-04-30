@@ -4,6 +4,8 @@ struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var onboardingComplete = false
     @AppStorage("appearance") private var appearanceRaw = "system"
     @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var lockService: AppLockService
+    @Environment(\.scenePhase) private var scenePhase
 
     private var colorScheme: ColorScheme? {
         switch appearanceRaw {
@@ -26,15 +28,29 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
-            if onboardingComplete {
-                TimelineView()
-            } else {
-                OnboardingView(onComplete: { onboardingComplete = true })
+        ZStack {
+            Group {
+                if onboardingComplete {
+                    TimelineView()
+                } else {
+                    OnboardingView(onComplete: { onboardingComplete = true })
+                }
+            }
+
+            if lockService.lockEnabled && lockService.isLocked {
+                LockOverlayView()
+                    .transition(.opacity)
             }
         }
         .preferredColorScheme(colorScheme)
         .dynamicTypeSize(typeSize)
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background {
+                lockService.lockIfEnabled()
+            } else if phase == .active {
+                lockService.evaluateIfNeeded()
+            }
+        }
     }
 }
 

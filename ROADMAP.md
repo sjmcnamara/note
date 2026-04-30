@@ -124,14 +124,17 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - `makeGroups` / `makeWeekGroups` extracted to a new `Domain/` source folder, both with injectable `now` so tests pin time
 - Unit tests grow from 7 → 30 across `IdentityServiceTests`, `TimelineGroupingTests`, `TagWeekGroupingTests`, `NoteModelTests`, plus existing `NsecValidatorTests`
 
+### [0.13.0] App lock + Settings restructure
+- Settings reorganised into explicit sections: Identity, Appearance, Advanced, About
+- Advanced card gains a "Lock with Face ID" toggle (default OFF) alongside the Keys & Backup nav row
+- `AppLockService` (`@MainActor ObservableObject`) — biometric-first (`deviceOwnerAuthenticationWithBiometrics`), falls back to device passcode (`deviceOwnerAuthentication`)
+- `LockOverlayView` at `ContentView` root: solid `noteBg`, NO.TE wordmark, Face ID icon, tap-to-unlock
+- Locks on `scenePhase == .background`, evaluates immediately on `.active`
+- `NSFaceIDUsageDescription` was already present from 0.5.0
+
 ---
 
 ## Up next
-
-### [0.13.0] App lock (FaceID gate)
-- Port `AppLockService` from whistle — biometric-first with device-passcode fallback
-- "Lock with FaceID" toggle in Basic Settings (default OFF)
-- Lock overlay at `ContentView` root; blocks until `evaluatePolicy` succeeds
 
 ### [0.14.0] Architecture review (doc)
 - `docs/architecture/backup.md` — compare relay vs file-export vs hybrid; land a decision

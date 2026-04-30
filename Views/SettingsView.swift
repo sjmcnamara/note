@@ -4,17 +4,16 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var identityService: IdentityService
+    @EnvironmentObject private var lockService: AppLockService
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.sectionGap) {
                 SettingsNavBar()
-                if let identity = identityService.identity {
-                    IdentityRow(identity: identity)
-                }
-                AppearancePicker()
-                TextSizeRow()
-                NavCard()
+                IdentitySection()
+                AppearanceSection()
+                AdvancedNavCard(lockService: lockService)
+                AboutNavCard()
             }
             .padding(.horizontal, Space.gutterH)
             .padding(.bottom, Space.sectionGap * 2)
@@ -53,7 +52,20 @@ private struct SettingsNavBar: View {
     }
 }
 
-// MARK: - Identity row
+// MARK: - Identity section
+
+private struct IdentitySection: View {
+    @EnvironmentObject private var identityService: IdentityService
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.l) {
+            SectionLabel("Identity")
+            if let identity = identityService.identity {
+                IdentityRow(identity: identity)
+            }
+        }
+    }
+}
 
 private struct IdentityRow: View {
     let identity: NostrIdentity
@@ -97,22 +109,26 @@ private struct IdentityRow: View {
     }
 }
 
-// MARK: - Appearance picker
+// MARK: - Appearance section
+
+private struct AppearanceSection: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.l) {
+            SectionLabel("Appearance")
+            AppearancePicker()
+            TextSizeRow()
+        }
+    }
+}
 
 private struct AppearancePicker: View {
     @AppStorage("appearance") private var appearanceRaw = "system"
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.l) {
-            Text("Appearance")
-                .font(NoteFont.captionS)
-                .foregroundStyle(Color.noteInkMute)
-
-            HStack(spacing: Space.l) {
-                AppearanceTile(label: "Light", scheme: "light", active: appearanceRaw == "light") { appearanceRaw = "light" }
-                AppearanceTile(label: "Night", scheme: "dark", active: appearanceRaw == "dark") { appearanceRaw = "dark" }
-                AppearanceTile(label: "System", scheme: "system", active: appearanceRaw == "system") { appearanceRaw = "system" }
-            }
+        HStack(spacing: Space.l) {
+            AppearanceTile(label: "Light",  scheme: "light",  active: appearanceRaw == "light")  { appearanceRaw = "light" }
+            AppearanceTile(label: "Night",  scheme: "dark",   active: appearanceRaw == "dark")   { appearanceRaw = "dark" }
+            AppearanceTile(label: "System", scheme: "system", active: appearanceRaw == "system") { appearanceRaw = "system" }
         }
     }
 }
@@ -166,8 +182,6 @@ private struct AppearanceTile: View {
     }
 }
 
-// MARK: - Text size row
-
 private struct TextSizeRow: View {
     @EnvironmentObject private var settings: AppSettings
 
@@ -209,33 +223,58 @@ private struct TextSizeRow: View {
     }
 }
 
-// MARK: - Nav card
+// MARK: - Advanced nav card (includes Lock toggle)
 
-private struct NavCard: View {
+private struct AdvancedNavCard: View {
+    @ObservedObject var lockService: AppLockService
+
     var body: some View {
-        VStack(spacing: 0) {
-            NavigationLink { AboutView() } label: {
-                navRow(label: "About")
-            }
-            .buttonStyle(.plain)
+        VStack(alignment: .leading, spacing: Space.l) {
+            SectionLabel("Advanced")
+            VStack(spacing: 0) {
+                NavigationLink { AdvancedSettingsView() } label: {
+                    navRow(label: "Keys & Backup",
+                           caption: "Identity, nsec, private relay")
+                }
+                .buttonStyle(.plain)
 
-            Rectangle().fill(Color.noteRule).frame(height: 1)
+                Rectangle().fill(Color.noteRule).frame(height: 1)
 
-            NavigationLink { AdvancedSettingsView() } label: {
-                navRow(label: "Advanced")
+                HStack {
+                    VStack(alignment: .leading, spacing: Space.xxs) {
+                        Text("Lock with Face ID")
+                            .font(NoteFont.body)
+                            .foregroundStyle(Color.noteInk)
+                        Text("Require Face ID or passcode on open")
+                            .font(NoteFont.captionS)
+                            .foregroundStyle(Color.noteInkMute)
+                    }
+                    Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { lockService.lockEnabled },
+                        set: { lockService.setLockEnabled($0) }
+                    ))
+                    .labelsHidden()
+                    .tint(Color.noteInk)
+                }
+                .padding(.vertical, Space.l)
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, Space.xl)
+            .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.xxl))
         }
-        .padding(.horizontal, Space.xl)
-        .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.xxl))
     }
 
     @ViewBuilder
-    private func navRow(label: String) -> some View {
+    private func navRow(label: String, caption: String) -> some View {
         HStack {
-            Text(label)
-                .font(NoteFont.body)
-                .foregroundStyle(Color.noteInk)
+            VStack(alignment: .leading, spacing: Space.xxs) {
+                Text(label)
+                    .font(NoteFont.body)
+                    .foregroundStyle(Color.noteInk)
+                Text(caption)
+                    .font(NoteFont.captionS)
+                    .foregroundStyle(Color.noteInkMute)
+            }
             Spacer()
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .medium))
@@ -245,13 +284,53 @@ private struct NavCard: View {
     }
 }
 
+// MARK: - About nav card
+
+private struct AboutNavCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.l) {
+            SectionLabel("About")
+            VStack(spacing: 0) {
+                NavigationLink { AboutView() } label: {
+                    HStack {
+                        Text("About NO.TE")
+                            .font(NoteFont.body)
+                            .foregroundStyle(Color.noteInk)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Color.noteInkMute)
+                    }
+                    .padding(.vertical, Space.l)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, Space.xl)
+            .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.xxl))
+        }
+    }
+}
+
+// MARK: - Shared section label
+
+private struct SectionLabel: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+
+    var body: some View {
+        Text(text)
+            .font(NoteFont.captionS)
+            .foregroundStyle(Color.noteInkMute)
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
-    let preview = IdentityService(storage: InMemorySecureStorage())
-    return NavigationStack {
+    NavigationStack {
         SettingsView()
     }
     .environmentObject(AppSettings.shared)
-    .environmentObject(preview)
+    .environmentObject(IdentityService(storage: InMemorySecureStorage()))
+    .environmentObject(AppLockService.shared)
 }

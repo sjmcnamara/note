@@ -5,6 +5,7 @@ import SwiftData
 struct NOTEApp: App {
     @State private var container: ModelContainer?
     @StateObject private var identityService = IdentityService()
+    @StateObject private var lockService = AppLockService.shared
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -20,6 +21,7 @@ struct NOTEApp: App {
                     .modelContainer(container)
                     .environmentObject(AppSettings.shared)
                     .environmentObject(identityService)
+                    .environmentObject(lockService)
             } else {
                 Color.noteBg
                     .ignoresSafeArea()
