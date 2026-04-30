@@ -6,11 +6,14 @@ final class AppLockService: ObservableObject {
     static let shared = AppLockService()
 
     @AppStorage("lockEnabled") private(set) var lockEnabled = false
-    @Published private(set) var isLocked = false
+    @Published private(set) var isLocked: Bool
 
     private var evaluating = false
 
-    private init() {}
+    private init() {
+        // Start locked on cold launch so force-quit + reopen requires auth.
+        isLocked = UserDefaults.standard.bool(forKey: "lockEnabled")
+    }
 
     func setLockEnabled(_ enabled: Bool) {
         lockEnabled = enabled
