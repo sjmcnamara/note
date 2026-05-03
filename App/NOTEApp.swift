@@ -9,7 +9,9 @@ struct NOTEApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        #if !targetEnvironment(macCatalyst)
         UIWindow.appearance().backgroundColor = UIColor(named: "noteBg")
+        #endif
         // init() must return immediately — the watchdog fires if we block here.
         // All store work happens in .task below, after the launch window closes.
     }
