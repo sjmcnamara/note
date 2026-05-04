@@ -1,0 +1,43 @@
+import SwiftUI
+import LocalAuthentication
+
+@MainActor
+final class AppLockService: ObservableObject {
+    static let shared = AppLockService()
+
+    @AppStorage("lockEnabled") private(set) var lockEnabled = false
+    @Published private(set) var isLocked: Bool
+
+    private var evaluating = false
+
+    private init() {
+        // Start locked on cold launch so force-quit + reopen requires auth.
+        isLocked = UserDefaults.standard.bool(forKey: "lockEnabled")
+    }
+
+    func setLockEnabled(_ enabled: Bool) {
+        lockEnabled = enabled
+        if !enabled { isLocked = false }
+    }
+
+    func lockIfEnabled() {
+        guard lockEnabled else { return }
+        isLocked = true
+    }
+
+    func evaluateIfNeeded() {
+        guard lockEnabled, isLocked, !evaluating else { return }
+        evaluating = true
+        let ctx = LAContext()
+        var err: NSError?
+        let policy: LAPolicy = ctx.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &err)
+            ? .deviceOwnerAuthenticationWithBiometrics
+            : .deviceOwnerAuthentication
+        ctx.evaluatePolicy(policy, localizedReason: "Unlock NO.TE") { [weak self] ok, _ in
+            DispatchQueue.main.async {
+                self?.evaluating = false
+                if ok { self?.isLocked = false }
+            }
+        }
+    }
+}
