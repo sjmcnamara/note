@@ -126,8 +126,8 @@ private struct AppearancePicker: View {
 
     var body: some View {
         HStack(spacing: Space.l) {
-            AppearanceTile(label: "Light",  scheme: "light",  active: appearanceRaw == "light")  { appearanceRaw = "light" }
-            AppearanceTile(label: "Night",  scheme: "dark",   active: appearanceRaw == "dark")   { appearanceRaw = "dark" }
+            AppearanceTile(label: "Light", scheme: "light", active: appearanceRaw == "light") { appearanceRaw = "light" }
+            AppearanceTile(label: "Night", scheme: "dark", active: appearanceRaw == "dark") { appearanceRaw = "dark" }
             AppearanceTile(label: "System", scheme: "system", active: appearanceRaw == "system") { appearanceRaw = "system" }
         }
     }
