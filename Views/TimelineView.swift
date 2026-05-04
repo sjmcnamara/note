@@ -11,12 +11,9 @@ struct TimelineView: View {
     @State private var editingNote: Note?
     @State private var pinnedTag: String?
 
-    private let defaultTags = ["work", "daily", "ideas", "reading", "dreams"]
-
     private var tags: [String] {
-        var seen = Set(defaultTags)
-        let extra = notes.flatMap(\.tags).filter { seen.insert($0).inserted }
-        return defaultTags + extra
+        var seen = Set<String>()
+        return notes.flatMap(\.tags).filter { seen.insert($0).inserted }
     }
 
     private func createNote() {
