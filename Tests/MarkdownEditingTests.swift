@@ -57,10 +57,40 @@ final class MarkdownEditingTests: XCTestCase {
         XCTAssertEqual(edit.selection, caret(8))
     }
 
-    func test_bold_emptySelection_insertsAtCaretNotAtEnd() {
-        let edit = MarkdownEditing.toggleInline("ab", selection: caret(1), marker: "**")
-        XCTAssertEqual(edit.text, "a****b")
-        XCTAssertEqual(edit.selection, caret(3))
+    func test_bold_caretInsideWord_wrapsWholeWord() {
+        let edit = MarkdownEditing.toggleInline("hello world", selection: caret(8), marker: "**")
+        XCTAssertEqual(edit.text, "hello **world**")
+        XCTAssertEqual(edit.selection, NSRange(location: 8, length: 5))
+    }
+
+    func test_italic_caretInsideWord_wrapsWholeWord() {
+        let edit = MarkdownEditing.toggleInline("hello world", selection: caret(2), marker: "*")
+        XCTAssertEqual(edit.text, "*hello* world")
+        XCTAssertEqual(edit.selection, NSRange(location: 1, length: 5))
+    }
+
+    func test_italic_caretInsideItalicWord_unwraps() {
+        let edit = MarkdownEditing.toggleInline("*hello* world", selection: caret(3), marker: "*")
+        XCTAssertEqual(edit.text, "hello world")
+        XCTAssertEqual(edit.selection, NSRange(location: 0, length: 5))
+    }
+
+    func test_italic_onBoldSelection_addsThirdStar() {
+        let edit = MarkdownEditing.toggleInline("**word**", selection: NSRange(location: 2, length: 4), marker: "*")
+        XCTAssertEqual(edit.text, "***word***")
+        XCTAssertEqual(edit.selection, NSRange(location: 3, length: 4))
+    }
+
+    func test_italic_caretInsideBoldWord_addsThirdStar() {
+        let edit = MarkdownEditing.toggleInline("**word**", selection: caret(4), marker: "*")
+        XCTAssertEqual(edit.text, "***word***")
+        XCTAssertEqual(edit.selection, NSRange(location: 3, length: 4))
+    }
+
+    func test_bold_onBoldItalicSelection_removesBoldKeepsItalic() {
+        let edit = MarkdownEditing.toggleInline("***word***", selection: NSRange(location: 3, length: 4), marker: "**")
+        XCTAssertEqual(edit.text, "*word*")
+        XCTAssertEqual(edit.selection, NSRange(location: 1, length: 4))
     }
 
     func test_bold_selectionIncludingMarkers_unwraps() {

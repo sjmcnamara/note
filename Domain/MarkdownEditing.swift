@@ -17,29 +17,41 @@ enum MarkdownEditing {
 
     static func toggleInline(_ text: String, selection: NSRange, marker: String) -> MarkdownEdit {
         let ns = text as NSString
-        let sel = clamp(selection, in: ns)
+        var sel = clamp(selection, in: ns)
         let markerLen = (marker as NSString).length
 
         if sel.length == 0 {
-            let out = ns.replacingCharacters(in: sel, with: marker + marker)
-            return MarkdownEdit(text: out, selection: NSRange(location: sel.location + markerLen, length: 0))
+            // No selection: wrap the word under the caret. With nothing to
+            // wrap, insert a marker pair and park the caret inside.
+            if let word = wordRange(at: sel.location, in: ns) {
+                sel = word
+            } else {
+                let out = ns.replacingCharacters(in: sel, with: marker + marker)
+                return MarkdownEdit(text: out, selection: NSRange(location: sel.location + markerLen, length: 0))
+            }
         }
 
         let selected = ns.substring(with: sel)
         let selectedNS = selected as NSString
 
-        // Selection already includes the markers → strip them.
-        if selected.hasPrefix(marker), selected.hasSuffix(marker), selectedNS.length >= 2 * markerLen {
+        // Selection already includes the markers → strip them. Skipped when
+        // the selection starts a longer run (e.g. "**bold**" under an italic
+        // toggle), where stripping one "*" would corrupt the bold pair.
+        if selected.hasPrefix(marker), selected.hasSuffix(marker), selectedNS.length >= 2 * markerLen,
+           !(marker == "*" && selected.hasPrefix("**")) {
             let inner = selectedNS.substring(with: NSRange(location: markerLen, length: selectedNS.length - 2 * markerLen))
             let out = ns.replacingCharacters(in: sel, with: inner)
             return MarkdownEdit(text: out, selection: NSRange(location: sel.location, length: (inner as NSString).length))
         }
 
-        // Markers immediately surround the selection → strip those.
+        // Markers immediately surround the selection → strip those. Same
+        // guard: an adjacent "*" that belongs to a "**" pair stays put, so
+        // italicizing bold text yields "***word***" instead of eating stars.
         let before = NSRange(location: sel.location - markerLen, length: markerLen)
         let after = NSRange(location: NSMaxRange(sel), length: markerLen)
         if sel.location >= markerLen, NSMaxRange(after) <= ns.length,
-           ns.substring(with: before) == marker, ns.substring(with: after) == marker {
+           ns.substring(with: before) == marker, ns.substring(with: after) == marker,
+           !(marker == "*" && (character("*", precedes: before, in: ns) || character("*", follows: after, in: ns))) {
             var out = ns.replacingCharacters(in: after, with: "")
             out = (out as NSString).replacingCharacters(in: before, with: "")
             return MarkdownEdit(text: out, selection: NSRange(location: sel.location - markerLen, length: sel.length))
@@ -141,6 +153,33 @@ enum MarkdownEditing {
     }
 
     // MARK: - Helpers
+
+    /// Expands a caret position to the alphanumeric word around it.
+    private static func wordRange(at location: Int, in ns: NSString) -> NSRange? {
+        func isWordChar(_ offset: Int) -> Bool {
+            guard offset >= 0, offset < ns.length else { return false }
+            guard let scalar = Unicode.Scalar(ns.character(at: offset)) else { return false }
+            return CharacterSet.alphanumerics.contains(scalar)
+        }
+        var start = location
+        var end = location
+        while isWordChar(start - 1) { start -= 1 }
+        while isWordChar(end) { end += 1 }
+        guard end > start else { return nil }
+        return NSRange(location: start, length: end - start)
+    }
+
+    private static func character(_ char: String, precedes range: NSRange, in ns: NSString) -> Bool {
+        let offset = range.location - 1
+        guard offset >= 0 else { return false }
+        return ns.substring(with: NSRange(location: offset, length: 1)) == char
+    }
+
+    private static func character(_ char: String, follows range: NSRange, in ns: NSString) -> Bool {
+        let offset = NSMaxRange(range)
+        guard offset < ns.length else { return false }
+        return ns.substring(with: NSRange(location: offset, length: 1)) == char
+    }
 
     private static func headingPrefix(of line: String) -> String {
         guard let range = line.range(of: "^#{1,6} ", options: .regularExpression) else { return "" }

@@ -136,8 +136,12 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Body editor swapped from `TextEditor` to UITextView-backed `MarkdownTextView` — pre-iOS-18 `TextEditor` exposes no selection, so toolbar commands could only append
 - B / I / H1 / H2 / bullet now apply at the caret, wrap the selection, and toggle off when re-tapped
 - Return on a `- ` item continues the list; Return on an empty item exits it
-- `Domain/MarkdownEditing.swift` pure formatting ops + `MarkdownEditingTests` (22 tests)
+- `Domain/MarkdownEditing.swift` pure formatting ops + `MarkdownEditingTests` (27 tests)
 - Keyboard bar extracted as `EditorKeyboardBar`, doubling as the body editor's `inputAccessoryView`
+- Inline toggles wrap the word under the caret (empty `**` pair only on whitespace); italic on bold gives `***word***`
+- New todos grab focus so they scroll above the keyboard
+- Edge swipe-right pops back to the timeline (system gesture was lost with the hidden nav bar)
+- Share icon → system share sheet with markdown export; ellipsis → Copy markdown / Delete note (interim until Screen 10)
 
 ---
 

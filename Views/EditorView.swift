@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 // MARK: - EditorView
 
@@ -10,6 +11,9 @@ struct EditorView: View {
     @State private var saveTask: Task<Void, Never>?
     @State private var showPreview = false
     @State private var format = MarkdownEditorController()
+    @State private var confirmDelete = false
+    @State private var deleted = false
+    @FocusState private var focusedTodo: UUID?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -24,7 +28,14 @@ struct EditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            EditorTopBar(saving: saving, showPreview: $showPreview, onBack: { dismiss() }, onShare: {})
+            EditorTopBar(
+                saving: saving,
+                showPreview: $showPreview,
+                shareText: exportMarkdown,
+                onBack: { dismiss() },
+                onCopy: { UIPasteboard.general.string = exportMarkdown },
+                onDelete: { confirmDelete = true }
+            )
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -39,7 +50,7 @@ struct EditorView: View {
                             keyboardBar(chrome: true)
                         }
                         if !note.todos.isEmpty {
-                            TodoSection(note: note, onEdit: markEdited, onAddTodo: addTodo)
+                            TodoSection(note: note, focus: $focusedTodo, onEdit: markEdited, onAddTodo: addTodo)
                         }
                     }
                 }
@@ -50,6 +61,21 @@ struct EditorView: View {
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        // Hidden nav bar disables the system back swipe; restore it manually.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 20, coordinateSpace: .global)
+                .onEnded { value in
+                    if value.startLocation.x < 44,
+                       value.translation.width > 80,
+                       abs(value.translation.height) < 60 {
+                        dismiss()
+                    }
+                }
+        )
+        .confirmationDialog("Delete this note?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { deleteNote() }
+            Button("Cancel", role: .cancel) {}
+        }
         .toolbar {
             // Shows when a SwiftUI field (title, tags, todos) has focus; the
             // body's UITextView carries the same bar as its input accessory.
@@ -64,6 +90,10 @@ struct EditorView: View {
         }
         .onDisappear {
             saveTask?.cancel()
+            if deleted {
+                persist()
+                return
+            }
             let blanks = note.todos.filter { $0.text.isEmpty }
             note.todos.removeAll { $0.text.isEmpty }
             for item in blanks { modelContext.delete(item) }
@@ -110,11 +140,34 @@ struct EditorView: View {
     }
 
     private func addTodo() {
-        if note.todos.last?.text.isEmpty == true { return }
+        if let last = note.todos.last, last.text.isEmpty {
+            focusedTodo = last.id
+            return
+        }
         let item = TodoItem(text: "")
         modelContext.insert(item)
         note.todos.append(item)
         markEdited()
+        // Focus once the new row exists; also scrolls it above the keyboard.
+        let id = item.id
+        DispatchQueue.main.async { focusedTodo = id }
+    }
+
+    private var exportMarkdown: String {
+        var parts: [String] = []
+        if !note.title.isEmpty { parts.append("# \(note.title)") }
+        if !note.body.isEmpty { parts.append(note.body) }
+        let todos = note.todos.filter { !$0.text.isEmpty }
+        if !todos.isEmpty {
+            parts.append(todos.map { "- [\($0.done ? "x" : " ")] \($0.text)" }.joined(separator: "\n"))
+        }
+        return parts.joined(separator: "\n\n")
+    }
+
+    private func deleteNote() {
+        deleted = true
+        modelContext.delete(note)
+        dismiss()
     }
 }
 
@@ -123,8 +176,10 @@ struct EditorView: View {
 private struct EditorTopBar: View {
     let saving: Bool
     @Binding var showPreview: Bool
+    let shareText: String
     let onBack: () -> Void
-    let onShare: () -> Void
+    let onCopy: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         HStack(spacing: 0) {
@@ -160,14 +215,22 @@ private struct EditorTopBar: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(showPreview ? "Edit mode" : "Preview mode")
 
-                Button(action: onShare) {
+                ShareLink(item: shareText) {
                     Image(systemName: "square.and.arrow.up")
                         .font(.system(size: 16, weight: .regular))
                         .foregroundStyle(Color.noteInkDim)
                 }
                 .buttonStyle(.plain)
+                .disabled(shareText.isEmpty)
 
-                Button(action: {}) {
+                Menu {
+                    Button(action: onCopy) {
+                        Label("Copy markdown", systemImage: "doc.on.doc")
+                    }
+                    Button(role: .destructive, action: onDelete) {
+                        Label("Delete note", systemImage: "trash")
+                    }
+                } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 16, weight: .regular))
                         .foregroundStyle(Color.noteInkDim)
@@ -425,6 +488,7 @@ private struct MarkdownPreview: View {
 
 private struct TodoSection: View {
     @Bindable var note: Note
+    var focus: FocusState<UUID?>.Binding
     let onEdit: () -> Void
     let onAddTodo: () -> Void
     @Environment(\.modelContext) private var modelContext
@@ -439,6 +503,7 @@ private struct TodoSection: View {
             ForEach($note.todos) { $todo in
                 TodoRow(
                     todo: $todo,
+                    focus: focus,
                     onEdit: onEdit,
                     onReturn: onAddTodo,
                     onDelete: {
@@ -457,6 +522,7 @@ private struct TodoSection: View {
 
 private struct TodoRow: View {
     @Binding var todo: TodoItem
+    var focus: FocusState<UUID?>.Binding
     let onEdit: () -> Void
     let onReturn: () -> Void
     let onDelete: () -> Void
@@ -478,6 +544,7 @@ private struct TodoRow: View {
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)
+                .focused(focus, equals: todo.id)
                 .onChange(of: todo.text) { _, _ in onEdit() }
                 .onSubmit { onReturn() }
 
