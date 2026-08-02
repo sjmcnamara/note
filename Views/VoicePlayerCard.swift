@@ -8,18 +8,21 @@ import SwiftUI
 final class VoicePlayer: NSObject, ObservableObject {
     @Published private(set) var isPlaying = false
     @Published private(set) var position: TimeInterval = 0
+    // Published: load() runs from onAppear, after the card's first render —
+    // the view only re-evaluates if loading announces itself.
+    @Published private(set) var isLoaded = false
 
     private(set) var duration: TimeInterval = 0
     private var player: AVAudioPlayer?
     private var timer: Timer?
 
-    var isLoaded: Bool { player != nil }
-
     func load(url: URL) {
-        guard player == nil else { return }
-        player = try? AVAudioPlayer(contentsOf: url)
-        player?.delegate = self
-        duration = player?.duration ?? 0
+        guard player == nil, let loaded = try? AVAudioPlayer(contentsOf: url) else { return }
+        loaded.delegate = self
+        loaded.prepareToPlay()
+        player = loaded
+        duration = loaded.duration
+        isLoaded = true
     }
 
     func toggle() {

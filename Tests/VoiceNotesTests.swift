@@ -1,3 +1,4 @@
+import AVFoundation
 import XCTest
 @testable import NOTE
 
@@ -63,5 +64,42 @@ final class VoiceNotesTests: XCTestCase {
         let note = Note(title: "plain")
         XCTAssertNil(note.audioFile)
         XCTAssertNil(note.audioDuration)
+    }
+}
+
+// MARK: - VoicePlayerTests
+
+@MainActor
+final class VoicePlayerTests: XCTestCase {
+
+    /// Regression: load() runs after the card's first render, so it must
+    /// publish — a successful load left the card on "Audio unavailable".
+    func test_load_validFile_publishesLoadedState() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(UUID().uuidString).caf")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try writeSilence(seconds: 1, to: url)
+
+        let player = VoicePlayer()
+        player.load(url: url)
+
+        XCTAssertTrue(player.isLoaded)
+        XCTAssertEqual(player.duration, 1.0, accuracy: 0.1)
+    }
+
+    func test_load_missingFile_staysUnloaded() {
+        let player = VoicePlayer()
+        player.load(url: FileManager.default.temporaryDirectory.appendingPathComponent("missing.m4a"))
+        XCTAssertFalse(player.isLoaded)
+    }
+
+    private func writeSilence(seconds: Double, to url: URL) throws {
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+        let frames = AVAudioFrameCount(44_100 * seconds)
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames)!
+        buffer.frameLength = frames
+        var file: AVAudioFile? = try AVAudioFile(forWriting: url, settings: format.settings)
+        try file?.write(from: buffer)
+        file = nil // AVAudioFile finalizes on deinit
     }
 }
