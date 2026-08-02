@@ -9,6 +9,35 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.13.2] — 2026-08-02
+
+### Fixed
+- **Todo list no longer pushed to the bottom of the note.** The body editor kept a 360pt minimum height even when todos followed, leaving a stretch of empty space before the list. With todos present the body now hugs its content (120pt minimum tap area); without them it keeps the tall tappable area.
+
+### Changed
+- `MARKETING_VERSION` 0.13.2, `CURRENT_PROJECT_VERSION` 14.
+
+---
+
+## [0.13.1] — 2026-08-02
+
+### Fixed
+- **Formatting toolbar now edits at the caret.** B / I / H1 / H2 / bullet previously appended to the end of the note (bold/italic even inserted a literal `text` placeholder). The body editor is now a `UITextView`-backed `MarkdownTextView`; commands apply at the cursor or wrap the current selection, and tapping the same format again toggles it off.
+- **Bullet lists continue on Return.** Pressing Return on a `- ` item starts the next item; Return on an empty item exits the list. Multi-line selections toggle bullets on every selected line.
+- **Italic no longer looks like a no-op.** B / I with no selection previously inserted an empty marker pair — for italic that rendered as `**`, indistinguishable from bold markers. Inline toggles now wrap the word under the caret (`*word*`), only falling back to a marker pair on whitespace. Italicizing bold text yields `***word***` instead of corrupting the `**` pair.
+- **Todos no longer hide behind the keyboard.** Adding a todo (toolbar button or Return in a todo row) focuses the new row, which scrolls it above the keyboard.
+- **Swipe right to go back.** The hidden navigation bar had disabled the system back gesture; an edge swipe now pops back to the timeline.
+- **Share and ellipsis actions wired up.** Share opens the system share sheet with the note as markdown (title, body, `- [ ]` todos); the ellipsis menu offers Copy markdown and Delete note (with confirmation). The full custom share sheet remains Screen 10.
+
+### Added
+- `Domain/MarkdownEditing.swift` — pure, unit-tested formatting operations (`toggleInline`, `setHeading`, `toggleBullet`, `returnKeyEdit`) shared by the toolbar and the return-key handler; 22 new tests in `MarkdownEditingTests`.
+
+### Changed
+- The keyboard formatting bar is extracted as `EditorKeyboardBar`, rendered both by the SwiftUI keyboard toolbar (title/tags/todo focus) and as the body editor's `inputAccessoryView` (SwiftUI's keyboard toolbar doesn't attach to UIKit first responders).
+- `MARKETING_VERSION` 0.13.1, `CURRENT_PROJECT_VERSION` 13.
+
+---
+
 ## [0.12.0] — 2026-04-27
 
 ### Added

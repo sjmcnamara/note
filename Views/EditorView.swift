@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 // MARK: - EditorView
 
@@ -9,6 +10,10 @@ struct EditorView: View {
     @State private var saving = false
     @State private var saveTask: Task<Void, Never>?
     @State private var showPreview = false
+    @State private var format = MarkdownEditorController()
+    @State private var confirmDelete = false
+    @State private var deleted = false
+    @FocusState private var focusedTodo: UUID?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -23,7 +28,14 @@ struct EditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            EditorTopBar(saving: saving, showPreview: $showPreview, onBack: { dismiss() }, onShare: {})
+            EditorTopBar(
+                saving: saving,
+                showPreview: $showPreview,
+                shareText: exportMarkdown,
+                onBack: { dismiss() },
+                onCopy: { UIPasteboard.general.string = exportMarkdown },
+                onDelete: { confirmDelete = true }
+            )
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -34,9 +46,18 @@ struct EditorView: View {
                     if showPreview {
                         MarkdownPreview(text: note.body)
                     } else {
-                        BodyField(text: $note.body)
+                        // With todos present the body hugs its content so the
+                        // todo list sits right under the text; without them it
+                        // keeps a tall tappable area.
+                        BodyField(
+                            text: $note.body,
+                            controller: format,
+                            minHeight: note.todos.isEmpty ? 360 : 120
+                        ) {
+                            keyboardBar(chrome: true)
+                        }
                         if !note.todos.isEmpty {
-                            TodoSection(note: note, onEdit: markEdited, onAddTodo: addTodo)
+                            TodoSection(note: note, focus: $focusedTodo, onEdit: markEdited, onAddTodo: addTodo)
                         }
                     }
                 }
@@ -47,20 +68,26 @@ struct EditorView: View {
         }
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+        // Hidden nav bar disables the system back swipe; restore it manually.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 20, coordinateSpace: .global)
+                .onEnded { value in
+                    if value.startLocation.x < 44,
+                       value.translation.width > 80,
+                       abs(value.translation.height) < 60 {
+                        dismiss()
+                    }
+                }
+        )
+        .confirmationDialog("Delete this note?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { deleteNote() }
+            Button("Cancel", role: .cancel) {}
+        }
         .toolbar {
+            // Shows when a SwiftUI field (title, tags, todos) has focus; the
+            // body's UITextView carries the same bar as its input accessory.
             ToolbarItemGroup(placement: .keyboard) {
-                Text(wordCount == 1 ? "1 word" : "\(wordCount) words")
-                    .font(NoteFont.captionS)
-                    .foregroundStyle(Color.noteInkMute)
-
-                Spacer()
-
-                FormatBtn(label: "B", bold: true) { wrapBody("**") }
-                FormatBtn(label: "I", italic: true) { wrapBody("*") }
-                FormatBtn(label: "H1") { insert("# ") }
-                FormatBtn(label: "H2") { insert("## ") }
-                FormatBtn(systemName: "list.bullet") { insert("- ") }
-                FormatBtn(systemName: "checkmark.square") { addTodo() }
+                keyboardBar(chrome: false)
             }
         }
         .onChange(of: note.title) { _, _ in markEdited() }
@@ -70,6 +97,10 @@ struct EditorView: View {
         }
         .onDisappear {
             saveTask?.cancel()
+            if deleted {
+                persist()
+                return
+            }
             let blanks = note.todos.filter { $0.text.isEmpty }
             note.todos.removeAll { $0.text.isEmpty }
             for item in blanks { modelContext.delete(item) }
@@ -102,23 +133,48 @@ struct EditorView: View {
         }
     }
 
-    // Inserts a block-level prefix (heading, bullet) on a new line.
-    private func insert(_ prefix: String) {
-        note.body += note.body.isEmpty ? prefix : "\n" + prefix
-    }
-
-    // Appends an inline marker pair with a placeholder word the user replaces.
-    private func wrapBody(_ marker: String) {
-        let separator = note.body.isEmpty ? "" : "\n"
-        note.body += separator + marker + "text" + marker
+    private func keyboardBar(chrome: Bool) -> EditorKeyboardBar {
+        EditorKeyboardBar(
+            wordCount: wordCount,
+            chrome: chrome,
+            onBold: { format.toggleInline("**") },
+            onItalic: { format.toggleInline("*") },
+            onH1: { format.setHeading(1) },
+            onH2: { format.setHeading(2) },
+            onBullet: { format.toggleBullet() },
+            onTodo: addTodo
+        )
     }
 
     private func addTodo() {
-        if note.todos.last?.text.isEmpty == true { return }
+        if let last = note.todos.last, last.text.isEmpty {
+            focusedTodo = last.id
+            return
+        }
         let item = TodoItem(text: "")
         modelContext.insert(item)
         note.todos.append(item)
         markEdited()
+        // Focus once the new row exists; also scrolls it above the keyboard.
+        let id = item.id
+        DispatchQueue.main.async { focusedTodo = id }
+    }
+
+    private var exportMarkdown: String {
+        var parts: [String] = []
+        if !note.title.isEmpty { parts.append("# \(note.title)") }
+        if !note.body.isEmpty { parts.append(note.body) }
+        let todos = note.todos.filter { !$0.text.isEmpty }
+        if !todos.isEmpty {
+            parts.append(todos.map { "- [\($0.done ? "x" : " ")] \($0.text)" }.joined(separator: "\n"))
+        }
+        return parts.joined(separator: "\n\n")
+    }
+
+    private func deleteNote() {
+        deleted = true
+        modelContext.delete(note)
+        dismiss()
     }
 }
 
@@ -127,8 +183,10 @@ struct EditorView: View {
 private struct EditorTopBar: View {
     let saving: Bool
     @Binding var showPreview: Bool
+    let shareText: String
     let onBack: () -> Void
-    let onShare: () -> Void
+    let onCopy: () -> Void
+    let onDelete: () -> Void
 
     var body: some View {
         HStack(spacing: 0) {
@@ -164,14 +222,22 @@ private struct EditorTopBar: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(showPreview ? "Edit mode" : "Preview mode")
 
-                Button(action: onShare) {
+                ShareLink(item: shareText) {
                     Image(systemName: "square.and.arrow.up")
                         .font(.system(size: 16, weight: .regular))
                         .foregroundStyle(Color.noteInkDim)
                 }
                 .buttonStyle(.plain)
+                .disabled(shareText.isEmpty)
 
-                Button(action: {}) {
+                Menu {
+                    Button(action: onCopy) {
+                        Label("Copy markdown", systemImage: "doc.on.doc")
+                    }
+                    Button(role: .destructive, action: onDelete) {
+                        Label("Delete note", systemImage: "trash")
+                    }
+                } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 16, weight: .regular))
                         .foregroundStyle(Color.noteInkDim)
@@ -349,17 +415,12 @@ private struct TagsRow: View {
 
 private struct BodyField: View {
     @Binding var text: String
+    let controller: MarkdownEditorController
+    let minHeight: CGFloat
+    let keyboardBar: () -> EditorKeyboardBar
 
     var body: some View {
-        TextEditor(text: $text)
-            .font(Font.custom("Inter Tight", size: 15, relativeTo: .body))
-            .foregroundStyle(Color.noteInk)
-            .tint(Color.noteInk)
-            .scrollContentBackground(.hidden)
-            .scrollDisabled(true)
-            .lineSpacing(9)
-            .frame(minHeight: 360, alignment: .top)
-            .textContentType(.none)
+        MarkdownTextView(text: $text, controller: controller, minHeight: minHeight, keyboardBar: keyboardBar)
             .padding(.bottom, Space.sectionGap)
     }
 }
@@ -435,6 +496,7 @@ private struct MarkdownPreview: View {
 
 private struct TodoSection: View {
     @Bindable var note: Note
+    var focus: FocusState<UUID?>.Binding
     let onEdit: () -> Void
     let onAddTodo: () -> Void
     @Environment(\.modelContext) private var modelContext
@@ -449,6 +511,7 @@ private struct TodoSection: View {
             ForEach($note.todos) { $todo in
                 TodoRow(
                     todo: $todo,
+                    focus: focus,
                     onEdit: onEdit,
                     onReturn: onAddTodo,
                     onDelete: {
@@ -467,6 +530,7 @@ private struct TodoSection: View {
 
 private struct TodoRow: View {
     @Binding var todo: TodoItem
+    var focus: FocusState<UUID?>.Binding
     let onEdit: () -> Void
     let onReturn: () -> Void
     let onDelete: () -> Void
@@ -488,6 +552,7 @@ private struct TodoRow: View {
                 .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
                 .tint(Color.noteInk)
                 .strikethrough(todo.done, color: Color.noteInkMute)
+                .focused(focus, equals: todo.id)
                 .onChange(of: todo.text) { _, _ in onEdit() }
                 .onSubmit { onReturn() }
 
@@ -500,6 +565,56 @@ private struct TodoRow: View {
             .buttonStyle(.plain)
         }
         .padding(.vertical, 3)
+    }
+}
+
+// MARK: - Keyboard bar
+
+/// Word count + formatting buttons. Rendered two ways: inside the SwiftUI
+/// keyboard toolbar (chrome: false — SwiftUI supplies the bar background) and
+/// as the body text view's input accessory (chrome: true — draws its own).
+struct EditorKeyboardBar: View {
+    let wordCount: Int
+    let chrome: Bool
+    let onBold: () -> Void
+    let onItalic: () -> Void
+    let onH1: () -> Void
+    let onH2: () -> Void
+    let onBullet: () -> Void
+    let onTodo: () -> Void
+
+    var body: some View {
+        if chrome {
+            row
+                .padding(.horizontal, 18)
+                .frame(height: 44)
+                .frame(maxWidth: .infinity)
+                .background(Color.noteBg)
+                .overlay(alignment: .top) {
+                    Color.noteRule.frame(height: 1)
+                }
+        } else {
+            row
+        }
+    }
+
+    private var row: some View {
+        HStack(spacing: 0) {
+            Text(wordCount == 1 ? "1 word" : "\(wordCount) words")
+                .font(NoteFont.captionS)
+                .foregroundStyle(Color.noteInkMute)
+
+            Spacer()
+
+            HStack(spacing: Space.s) {
+                FormatBtn(label: "B", bold: true, action: onBold)
+                FormatBtn(label: "I", italic: true, action: onItalic)
+                FormatBtn(label: "H1", action: onH1)
+                FormatBtn(label: "H2", action: onH2)
+                FormatBtn(systemName: "list.bullet", action: onBullet)
+                FormatBtn(systemName: "checkmark.square", action: onTodo)
+            }
+        }
     }
 }
 
