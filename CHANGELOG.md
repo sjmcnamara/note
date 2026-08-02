@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- **CodeQL workflow slimmed.** No longer runs on every PR push (CI + SwiftLint gate PRs; the traced Swift build made each run ~25 min). Now runs on master pushes touching Swift/`project.yml`/the workflow itself, plus the Monday schedule. SPM packages cached with the same key as CI, so the rust-nostr binary isn't re-downloaded each run.
+
 ---
 
 ## [0.12.0] — 2026-04-27
