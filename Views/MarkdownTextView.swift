@@ -40,9 +40,8 @@ final class MarkdownEditorController {
 struct MarkdownTextView: UIViewRepresentable {
     @Binding var text: String
     let controller: MarkdownEditorController
+    var minHeight: CGFloat = 360
     let keyboardBar: () -> EditorKeyboardBar
-
-    private static let minHeight: CGFloat = 360
 
     static var attributes: [NSAttributedString.Key: Any] {
         let paragraph = NSMutableParagraphStyle()
@@ -102,7 +101,7 @@ struct MarkdownTextView: UIViewRepresentable {
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
         guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
         let fit = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
-        return CGSize(width: width, height: max(fit.height, Self.minHeight))
+        return CGSize(width: width, height: max(fit.height, minHeight))
     }
 
     // MARK: - Coordinator

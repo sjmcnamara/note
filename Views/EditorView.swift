@@ -46,7 +46,14 @@ struct EditorView: View {
                     if showPreview {
                         MarkdownPreview(text: note.body)
                     } else {
-                        BodyField(text: $note.body, controller: format) {
+                        // With todos present the body hugs its content so the
+                        // todo list sits right under the text; without them it
+                        // keeps a tall tappable area.
+                        BodyField(
+                            text: $note.body,
+                            controller: format,
+                            minHeight: note.todos.isEmpty ? 360 : 120
+                        ) {
                             keyboardBar(chrome: true)
                         }
                         if !note.todos.isEmpty {
@@ -409,10 +416,11 @@ private struct TagsRow: View {
 private struct BodyField: View {
     @Binding var text: String
     let controller: MarkdownEditorController
+    let minHeight: CGFloat
     let keyboardBar: () -> EditorKeyboardBar
 
     var body: some View {
-        MarkdownTextView(text: $text, controller: controller, keyboardBar: keyboardBar)
+        MarkdownTextView(text: $text, controller: controller, minHeight: minHeight, keyboardBar: keyboardBar)
             .padding(.bottom, Space.sectionGap)
     }
 }

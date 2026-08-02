@@ -143,6 +143,9 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Edge swipe-right pops back to the timeline (system gesture was lost with the hidden nav bar)
 - Share icon → system share sheet with markdown export; ellipsis → Copy markdown / Delete note (interim until Screen 10)
 
+### [0.13.2] Editor layout fix
+- Body editor's 360pt min height only applies when the note has no todos; with todos it hugs content (120pt min) so the list sits right under the text
+
 ---
 
 ## Up next
