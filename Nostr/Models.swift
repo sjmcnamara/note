@@ -21,6 +21,10 @@ import SwiftData
     @Relationship(deleteRule: .cascade) var todos: [TodoItem]
     var createdAt: Date
     var updatedAt: Date
+    // Voice note attachment: filename inside VoiceNotes.directory + length
+    // in seconds. Optional with defaults so existing stores migrate lightly.
+    var audioFile: String?
+    var audioDuration: Double?
 
     init(
         title: String,
@@ -28,7 +32,9 @@ import SwiftData
         tags: [String] = [],
         todos: [TodoItem] = [],
         createdAt: Date = Date(),
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        audioFile: String? = nil,
+        audioDuration: Double? = nil
     ) {
         self.id = UUID()
         self.title = title
@@ -37,6 +43,8 @@ import SwiftData
         self.todos = todos
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.audioFile = audioFile
+        self.audioDuration = audioDuration
     }
 }
 

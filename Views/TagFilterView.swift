@@ -120,6 +120,7 @@ struct TagFilterView: View {
     }
 
     private func deleteNote(_ note: Note) {
+        VoiceNotes.deleteAudio(for: note)
         modelContext.delete(note)
         try? modelContext.save()
     }

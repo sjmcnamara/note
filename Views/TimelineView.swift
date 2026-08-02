@@ -7,6 +7,7 @@ struct TimelineView: View {
     @Query(sort: \Note.createdAt, order: .reverse) private var notes: [Note]
     @Environment(\.modelContext) private var modelContext
     @State private var showSearch = false
+    @State private var showRecorder = false
     @State private var composeNote: Note?
     @State private var editingNote: Note?
     @State private var pinnedTag: String?
@@ -22,6 +23,11 @@ struct TimelineView: View {
         composeNote = note
     }
 
+    private func saveVoiceNote(fileName: String, duration: TimeInterval) {
+        let note = Note(title: "Voice note", audioFile: fileName, audioDuration: duration)
+        withAnimation { modelContext.insert(note) }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
@@ -29,7 +35,10 @@ struct TimelineView: View {
                     TimelineHeader(showSearch: $showSearch)
 
                     if notes.isEmpty {
-                        EmptyTimelineView(onStartNote: createNote)
+                        EmptyTimelineView(
+                            onStartNote: createNote,
+                            onRecord: { withAnimation(.easeInOut(duration: 0.15)) { showRecorder = true } }
+                        )
                     } else {
                         TagStrip(tags: tags) { pinnedTag = $0 }
 
@@ -51,9 +60,12 @@ struct TimelineView: View {
                     }
                 }
 
-                TimelineComposeBar(onCreate: createNote)
-                    .padding(.horizontal, Space.gutterH)
-                    .padding(.bottom, 24)
+                TimelineComposeBar(
+                    onCreate: createNote,
+                    onRecord: { withAnimation(.easeInOut(duration: 0.15)) { showRecorder = true } }
+                )
+                .padding(.horizontal, Space.gutterH)
+                .padding(.bottom, 24)
             }
             .background(Color.noteBg.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
@@ -74,7 +86,16 @@ struct TimelineView: View {
                     .transition(.opacity)
                 }
             }
+            .overlay {
+                if showRecorder {
+                    VoiceRecorderOverlay(onSave: saveVoiceNote) {
+                        withAnimation(.easeInOut(duration: 0.15)) { showRecorder = false }
+                    }
+                    .transition(.opacity)
+                }
+            }
             .animation(.easeInOut(duration: 0.15), value: showSearch)
+            .animation(.easeInOut(duration: 0.15), value: showRecorder)
         }
     }
 
@@ -105,6 +126,7 @@ struct TimelineView: View {
         .alignmentGuide(.listRowSeparatorLeading) { _ in Space.gutterH }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
+                VoiceNotes.deleteAudio(for: note)
                 withAnimation { modelContext.delete(note) }
             } label: {
                 Label("Delete", systemImage: "trash")
@@ -240,6 +262,17 @@ private struct NoteRow: View {
                         .lineLimit(2)
                 }
 
+                if note.audioFile != nil {
+                    HStack(spacing: Space.s) {
+                        Image(systemName: "mic")
+                            .font(.system(size: 10, weight: .regular))
+                        Text(VoiceNotes.formatDuration(note.audioDuration ?? 0))
+                            .font(NoteFont.captionS)
+                            .monospacedDigit()
+                    }
+                    .foregroundStyle(Color.noteInkDim)
+                }
+
                 if !note.tags.isEmpty {
                     HStack(spacing: Space.m) {
                         ForEach(note.tags, id: \.self) { tag in
@@ -270,6 +303,7 @@ private struct NoteRow: View {
 
 private struct TimelineComposeBar: View {
     let onCreate: () -> Void
+    let onRecord: () -> Void
 
     var body: some View {
         HStack(spacing: 0) {
@@ -279,10 +313,15 @@ private struct TimelineComposeBar: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.leading, Space.sectionGap)
 
-            Image(systemName: "mic")
-                .font(.system(size: 15, weight: .regular))
-                .foregroundStyle(Color.noteInkDim)
-                .frame(width: 36, height: 36)
+            Button(action: onRecord) {
+                Image(systemName: "mic")
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundStyle(Color.noteInkDim)
+                    .frame(width: 36, height: 36)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Record a voice note")
 
             Button(action: onCreate) {
                 Image(systemName: "plus")

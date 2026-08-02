@@ -41,13 +41,14 @@ targets:
           UIColorName: noteBg
         UIRequiresFullScreen: YES
         NSFaceIDUsageDescription: "Reveal your secret key"
+        NSMicrophoneUsageDescription: "Voice notes are recorded on this device and stay on it."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.smcnamara.note
         DEVELOPMENT_TEAM: 3V55494FNM
         SWIFT_VERSION: 5.9
-        MARKETING_VERSION: 0.13.2
-        CURRENT_PROJECT_VERSION: 14
+        MARKETING_VERSION: 0.14.0
+        CURRENT_PROJECT_VERSION: 15
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: YES
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: YES
