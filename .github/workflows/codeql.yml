@@ -1,10 +1,15 @@
 name: CodeQL
 
+# PR gating is handled by CI + SwiftLint; the ~25-minute traced Swift build
+# makes CodeQL too slow for every PR push. Runs on master (code changes only)
+# and weekly.
 on:
   push:
     branches: [master]
-  pull_request:
-    branches: [master]
+    paths:
+      - '**.swift'
+      - 'project.yml'
+      - '.github/workflows/codeql.yml'
   schedule:
     - cron: '0 8 * * 1'  # Every Monday 08:00 UTC
 
@@ -34,12 +39,24 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
+      # Same path + key as ci.yml, so this job reuses the cache CI populates.
+      # Only the package downloads are cached (notably the rust-nostr binary);
+      # all sources still compile every run, which CodeQL's tracer requires.
+      - name: Cache SPM packages
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        with:
+          path: .spm-packages
+          key: spm-${{ runner.os }}-${{ hashFiles('project.yml') }}
+          restore-keys: |
+            spm-${{ runner.os }}-
+
       - name: Build
         run: |
           xcodebuild build \
             -project NOTE.xcodeproj \
             -scheme NOTE \
             -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+            -clonedSourcePackagesDirPath .spm-packages \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Perform CodeQL Analysis
