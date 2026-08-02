@@ -7,6 +7,7 @@ import SwiftUI
 
 struct EmptyTimelineView: View {
     let onStartNote: () -> Void
+    let onRecord: () -> Void
     @State private var toastMessage: String?
 
     var body: some View {
@@ -22,9 +23,7 @@ struct EmptyTimelineView: View {
 
                 VStack(spacing: Space.base) {
                     EmptyCTA(systemIcon: "plus", label: "Start a note", action: onStartNote)
-                    EmptyCTA(systemIcon: "mic", label: "Record a voice memo") {
-                        showToast("Voice memos land later.")
-                    }
+                    EmptyCTA(systemIcon: "mic", label: "Record a voice memo", action: onRecord)
                 }
                 .padding(.horizontal, Space.gutterH)
 
@@ -152,6 +151,6 @@ private struct Toast: View {
 // MARK: - Preview
 
 #Preview {
-    EmptyTimelineView(onStartNote: {})
+    EmptyTimelineView(onStartNote: {}, onRecord: {})
         .background(Color.noteBg.ignoresSafeArea())
 }

@@ -7,8 +7,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+---
+
+## [0.14.0] — 2026-08-02
+
+### Added
+- **Voice notes.** The compose-bar mic (previously decorative) and the empty-state "Record a voice memo" CTA now open a recording overlay with pause/resume, delete, and save. Saving creates a "Voice note" in the timeline; rows show a mic glyph + duration.
+- Recording via `AVAudioRecorder` (AAC mono, 44.1 kHz) into `Documents/VoiceNotes/`; `Note` gains optional `audioFile` + `audioDuration` (lightweight SwiftData migration).
+- Playback card in the Editor (`VoicePlayerCard`) — play/pause, progress bar, duration; notes with audio remain fully editable for annotations.
+- Microphone-permission denied state in the overlay with an Open Settings shortcut; `NSMicrophoneUsageDescription` added.
+- Audio files are removed on note delete (timeline swipe, tag-filter swipe, editor menu).
+- `VoiceNotesTests` — duration formatting, file naming/paths, delete cleanup, model defaults.
+
 ### Changed
 - **CodeQL workflow slimmed.** No longer runs on every PR push (CI + SwiftLint gate PRs; the traced Swift build made each run ~25 min). Now runs on master pushes touching Swift/`project.yml`/the workflow itself, plus the Monday schedule. SPM packages cached with the same key as CI, so the rust-nostr binary isn't re-downloaded each run.
+- `MARKETING_VERSION` 0.14.0, `CURRENT_PROJECT_VERSION` 15.
 
 ---
 

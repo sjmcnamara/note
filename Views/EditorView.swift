@@ -43,6 +43,10 @@ struct EditorView: View {
                     TitleField(title: $note.title)
                     TagsRow(tags: $note.tags)
 
+                    if let audioFile = note.audioFile {
+                        VoicePlayerCard(fileName: audioFile, duration: note.audioDuration ?? 0)
+                    }
+
                     if showPreview {
                         MarkdownPreview(text: note.body)
                     } else {
@@ -173,6 +177,7 @@ struct EditorView: View {
 
     private func deleteNote() {
         deleted = true
+        VoiceNotes.deleteAudio(for: note)
         modelContext.delete(note)
         dismiss()
     }

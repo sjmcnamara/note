@@ -22,6 +22,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Reveal your secret key</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Voice notes are recorded on this device and stay on it.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>InterTight.ttf</string>

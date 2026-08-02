@@ -148,9 +148,19 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 
 ---
 
+### [0.14.0] Voice notes
+- Compose-bar mic + empty-state CTA open a recording overlay: pause/resume, delete, save
+- `VoiceRecorder` (`AVAudioRecorder`, AAC mono) records into `Documents/VoiceNotes/`; permission-denied state links to Settings
+- `Note.audioFile` / `audioDuration` optional fields (lightweight migration); timeline rows show mic glyph + duration
+- `VoicePlayerCard` in the Editor: play/pause + progress; body stays editable for annotations
+- Audio files cleaned up on every note-delete path
+- Deferred: transcription, waveform scrubbing, share/export of audio
+
+---
+
 ## Up next
 
-### [0.14.0] Architecture review (doc)
+### Architecture review (doc)
 - `docs/architecture/backup.md` — compare relay vs file-export vs hybrid; land a decision
 
 ### Screen 10 — Share & export
