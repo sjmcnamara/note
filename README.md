@@ -5,7 +5,7 @@
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sjmcnamara/note/badge)](https://scorecard.dev/viewer/?uri=github.com/sjmcnamara/note)
 [![codecov](https://codecov.io/gh/sjmcnamara/note/graph/badge.svg)](https://codecov.io/gh/sjmcnamara/note)
 
-**Status:** v0.14.0 — Voice notes (record, pause, save; playback in Editor)
+**Status:** v0.14.1 — Encryption at rest for notes + voice recordings (`.completeUnlessOpen` file protection)
 
 A private, local-first note app for iPhone. Notes stay on your device. Nostr provides identity and optional encrypted backup — nothing is shared unless you ask for it.
 
