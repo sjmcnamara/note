@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- **New app icon.** All 18 `AppIcon.appiconset` sizes regenerated from a new 1024px master (alpha channel stripped — App Store requires an opaque marketing icon).
 - **CodeQL workflow slimmed.** No longer runs on every PR push (CI + SwiftLint gate PRs; the traced Swift build made each run ~25 min). Now runs on master pushes touching Swift/`project.yml`/the workflow itself, plus the Monday schedule. SPM packages cached with the same key as CI, so the rust-nostr binary isn't re-downloaded each run.
 
 ---
