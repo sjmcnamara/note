@@ -9,6 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.13.1] — 2026-08-02
+
+### Fixed
+- **Formatting toolbar now edits at the caret.** B / I / H1 / H2 / bullet previously appended to the end of the note (bold/italic even inserted a literal `text` placeholder). The body editor is now a `UITextView`-backed `MarkdownTextView`; commands apply at the cursor or wrap the current selection, and tapping the same format again toggles it off.
+- **Bullet lists continue on Return.** Pressing Return on a `- ` item starts the next item; Return on an empty item exits the list. Multi-line selections toggle bullets on every selected line.
+
+### Added
+- `Domain/MarkdownEditing.swift` — pure, unit-tested formatting operations (`toggleInline`, `setHeading`, `toggleBullet`, `returnKeyEdit`) shared by the toolbar and the return-key handler; 22 new tests in `MarkdownEditingTests`.
+
+### Changed
+- The keyboard formatting bar is extracted as `EditorKeyboardBar`, rendered both by the SwiftUI keyboard toolbar (title/tags/todo focus) and as the body editor's `inputAccessoryView` (SwiftUI's keyboard toolbar doesn't attach to UIKit first responders).
+- `MARKETING_VERSION` 0.13.1, `CURRENT_PROJECT_VERSION` 13.
+
+---
+
 ## [0.12.0] — 2026-04-27
 
 ### Added

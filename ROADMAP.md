@@ -132,6 +132,13 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Locks on `scenePhase == .background`, evaluates immediately on `.active`
 - `NSFaceIDUsageDescription` was already present from 0.5.0
 
+### [0.13.1] Editor markdown fixes
+- Body editor swapped from `TextEditor` to UITextView-backed `MarkdownTextView` — pre-iOS-18 `TextEditor` exposes no selection, so toolbar commands could only append
+- B / I / H1 / H2 / bullet now apply at the caret, wrap the selection, and toggle off when re-tapped
+- Return on a `- ` item continues the list; Return on an empty item exits it
+- `Domain/MarkdownEditing.swift` pure formatting ops + `MarkdownEditingTests` (22 tests)
+- Keyboard bar extracted as `EditorKeyboardBar`, doubling as the body editor's `inputAccessoryView`
+
 ---
 
 ## Up next

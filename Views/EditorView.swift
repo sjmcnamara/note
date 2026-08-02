@@ -9,6 +9,7 @@ struct EditorView: View {
     @State private var saving = false
     @State private var saveTask: Task<Void, Never>?
     @State private var showPreview = false
+    @State private var format = MarkdownEditorController()
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -34,7 +35,9 @@ struct EditorView: View {
                     if showPreview {
                         MarkdownPreview(text: note.body)
                     } else {
-                        BodyField(text: $note.body)
+                        BodyField(text: $note.body, controller: format) {
+                            keyboardBar(chrome: true)
+                        }
                         if !note.todos.isEmpty {
                             TodoSection(note: note, onEdit: markEdited, onAddTodo: addTodo)
                         }
@@ -48,19 +51,10 @@ struct EditorView: View {
         .background(Color.noteBg.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .toolbar {
+            // Shows when a SwiftUI field (title, tags, todos) has focus; the
+            // body's UITextView carries the same bar as its input accessory.
             ToolbarItemGroup(placement: .keyboard) {
-                Text(wordCount == 1 ? "1 word" : "\(wordCount) words")
-                    .font(NoteFont.captionS)
-                    .foregroundStyle(Color.noteInkMute)
-
-                Spacer()
-
-                FormatBtn(label: "B", bold: true) { wrapBody("**") }
-                FormatBtn(label: "I", italic: true) { wrapBody("*") }
-                FormatBtn(label: "H1") { insert("# ") }
-                FormatBtn(label: "H2") { insert("## ") }
-                FormatBtn(systemName: "list.bullet") { insert("- ") }
-                FormatBtn(systemName: "checkmark.square") { addTodo() }
+                keyboardBar(chrome: false)
             }
         }
         .onChange(of: note.title) { _, _ in markEdited() }
@@ -102,15 +96,17 @@ struct EditorView: View {
         }
     }
 
-    // Inserts a block-level prefix (heading, bullet) on a new line.
-    private func insert(_ prefix: String) {
-        note.body += note.body.isEmpty ? prefix : "\n" + prefix
-    }
-
-    // Appends an inline marker pair with a placeholder word the user replaces.
-    private func wrapBody(_ marker: String) {
-        let separator = note.body.isEmpty ? "" : "\n"
-        note.body += separator + marker + "text" + marker
+    private func keyboardBar(chrome: Bool) -> EditorKeyboardBar {
+        EditorKeyboardBar(
+            wordCount: wordCount,
+            chrome: chrome,
+            onBold: { format.toggleInline("**") },
+            onItalic: { format.toggleInline("*") },
+            onH1: { format.setHeading(1) },
+            onH2: { format.setHeading(2) },
+            onBullet: { format.toggleBullet() },
+            onTodo: addTodo
+        )
     }
 
     private func addTodo() {
@@ -349,17 +345,11 @@ private struct TagsRow: View {
 
 private struct BodyField: View {
     @Binding var text: String
+    let controller: MarkdownEditorController
+    let keyboardBar: () -> EditorKeyboardBar
 
     var body: some View {
-        TextEditor(text: $text)
-            .font(Font.custom("Inter Tight", size: 15, relativeTo: .body))
-            .foregroundStyle(Color.noteInk)
-            .tint(Color.noteInk)
-            .scrollContentBackground(.hidden)
-            .scrollDisabled(true)
-            .lineSpacing(9)
-            .frame(minHeight: 360, alignment: .top)
-            .textContentType(.none)
+        MarkdownTextView(text: $text, controller: controller, keyboardBar: keyboardBar)
             .padding(.bottom, Space.sectionGap)
     }
 }
@@ -500,6 +490,56 @@ private struct TodoRow: View {
             .buttonStyle(.plain)
         }
         .padding(.vertical, 3)
+    }
+}
+
+// MARK: - Keyboard bar
+
+/// Word count + formatting buttons. Rendered two ways: inside the SwiftUI
+/// keyboard toolbar (chrome: false — SwiftUI supplies the bar background) and
+/// as the body text view's input accessory (chrome: true — draws its own).
+struct EditorKeyboardBar: View {
+    let wordCount: Int
+    let chrome: Bool
+    let onBold: () -> Void
+    let onItalic: () -> Void
+    let onH1: () -> Void
+    let onH2: () -> Void
+    let onBullet: () -> Void
+    let onTodo: () -> Void
+
+    var body: some View {
+        if chrome {
+            row
+                .padding(.horizontal, 18)
+                .frame(height: 44)
+                .frame(maxWidth: .infinity)
+                .background(Color.noteBg)
+                .overlay(alignment: .top) {
+                    Color.noteRule.frame(height: 1)
+                }
+        } else {
+            row
+        }
+    }
+
+    private var row: some View {
+        HStack(spacing: 0) {
+            Text(wordCount == 1 ? "1 word" : "\(wordCount) words")
+                .font(NoteFont.captionS)
+                .foregroundStyle(Color.noteInkMute)
+
+            Spacer()
+
+            HStack(spacing: Space.s) {
+                FormatBtn(label: "B", bold: true, action: onBold)
+                FormatBtn(label: "I", italic: true, action: onItalic)
+                FormatBtn(label: "H1", action: onH1)
+                FormatBtn(label: "H2", action: onH2)
+                FormatBtn(systemName: "list.bullet", action: onBullet)
+                FormatBtn(systemName: "checkmark.square", action: onTodo)
+            }
+        }
     }
 }
 
