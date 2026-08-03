@@ -40,7 +40,9 @@ final class VoiceRecorder: NSObject, ObservableObject {
             try session.setActive(true)
 
             let name = VoiceNotes.newFileName()
-            let recorder = try AVAudioRecorder(url: VoiceNotes.url(for: name), settings: Self.settings)
+            let url = VoiceNotes.url(for: name)
+            let recorder = try AVAudioRecorder(url: url, settings: Self.settings)
+            FileProtection.apply(to: url)
             guard recorder.record() else {
                 phase = .denied
                 return

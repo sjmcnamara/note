@@ -156,6 +156,11 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - Audio files cleaned up on every note-delete path
 - Deferred: transcription, waveform scrubbing, share/export of audio
 
+### [0.14.1] Encryption at rest
+- SwiftData store + voice note files were relying on iOS's default `.completeUntilFirstUserAuthentication` — decryptable in the background from first unlock until reboot
+- `Domain/FileProtection.swift` applies `.completeUnlessOpen` (not `.complete`, which would kill an in-progress write on lock) to the store's `.sqlite`/`-wal`/`-shm` and to each voice recording at creation
+- Considered deriving a local encryption key from the nsec instead — rejected: no native SwiftData hook for it, ties storage security to identity-key rotation, and doesn't improve the real threat model over OS-backed file protection. The nsec-derived-key pattern stays reserved for NIP-44 relay backup, where it belongs.
+
 ---
 
 ## Up next

@@ -9,6 +9,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.14.1] — 2026-08-02
+
+### Fixed
+- **Notes and voice recordings now use `NSFileProtectionCompleteUnlessOpen`.** Previously both relied on iOS's default (`.completeUntilFirstUserAuthentication`), meaning the SwiftData store and voice note `.m4a` files stayed decryptable in the background any time after the first unlock following a boot — not just while the app was actively in use. `.completeUnlessOpen` (not `.complete`, which would kill an in-progress write the instant the device locks) is applied to the store's `.sqlite`/`-wal`/`-shm` files at container open and to each voice recording at creation.
+- New `Domain/FileProtection.swift` + `FileProtectionTests` (3 tests; suite 71/71).
+
+### Changed
+- `MARKETING_VERSION` 0.14.1, `CURRENT_PROJECT_VERSION` 16.
+
+---
+
 ## [0.14.0] — 2026-08-02
 
 ### Added

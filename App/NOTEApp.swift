@@ -53,7 +53,13 @@ struct NOTEApp: App {
         let config  = ModelConfiguration(schema: schema, url: storeURL, cloudKitDatabase: .none)
 
         do {
-            return try ModelContainer(for: schema, configurations: [config])
+            let container = try ModelContainer(for: schema, configurations: [config])
+            // SQLite's WAL journal mode means writes land in -wal/-shm, not
+            // just the base file — all three need protection.
+            for suffix in ["", "-wal", "-shm"] {
+                FileProtection.apply(to: URL(fileURLWithPath: storeURL.path + suffix))
+            }
+            return container
         } catch {
             fatalError("ModelContainer failed: \(error)")
         }
