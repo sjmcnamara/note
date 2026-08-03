@@ -5,7 +5,7 @@ import Security
 
 enum KeychainKey: String {
     /// The user's nsec (Nostr secret key), bech32-encoded.
-    case nsec = "com.smcnamara.note.nsec"
+    case nsec = "com.sjmcnamara.note.nsec"
 }
 
 // MARK: - Protocol
@@ -26,7 +26,7 @@ final class KeychainService: SecureStorage, @unchecked Sendable {
     static let shared = KeychainService()
     private init() {}
 
-    private static let service = "com.smcnamara.note"
+    private static let service = "com.sjmcnamara.note"
 
     @discardableResult
     func save(key: KeychainKey, value: String) -> Bool {
