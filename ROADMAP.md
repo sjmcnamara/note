@@ -161,6 +161,9 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 - `Domain/FileProtection.swift` applies `.completeUnlessOpen` (not `.complete`, which would kill an in-progress write on lock) to the store's `.sqlite`/`-wal`/`-shm` and to each voice recording at creation
 - Considered deriving a local encryption key from the nsec instead — rejected: no native SwiftData hook for it, ties storage security to identity-key rotation, and doesn't improve the real threat model over OS-backed file protection. The nsec-derived-key pattern stays reserved for NIP-44 relay backup, where it belongs.
 
+### [0.14.2] Editor layout fix, take 2
+- The 0.13.2 fix left a fixed 120pt floor on the body editor whenever todos were present — still a visible gap for short/empty bodies. Floor is now 0; the body sizes purely to its content so the todo list sits right under the last line of text.
+
 ---
 
 ## Up next

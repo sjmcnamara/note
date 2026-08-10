@@ -9,6 +9,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.14.2] — 2026-08-10
+
+### Fixed
+- **Todo list still landed on the bottom half of the note.** The 0.13.2 fix shrank the body editor's minimum height to 120pt once todos were present, but that's still a fixed floor — short or empty bodies left a stretch of blank space before the list. The body now hugs its actual content with no minimum when todos are present, so the list sits directly under the last line of text.
+
+### Changed
+- `MARKETING_VERSION` 0.14.2, `CURRENT_PROJECT_VERSION` 17.
+
+---
+
 ## [0.14.1] — 2026-08-02
 
 ### Fixed

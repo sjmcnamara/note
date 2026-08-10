@@ -56,7 +56,7 @@ struct EditorView: View {
                         BodyField(
                             text: $note.body,
                             controller: format,
-                            minHeight: note.todos.isEmpty ? 360 : 120
+                            minHeight: note.todos.isEmpty ? 360 : 0
                         ) {
                             keyboardBar(chrome: true)
                         }
