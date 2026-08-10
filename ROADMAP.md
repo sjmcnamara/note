@@ -164,6 +164,13 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 ### [0.14.2] Editor layout fix, take 2
 - The 0.13.2 fix left a fixed 120pt floor on the body editor whenever todos were present — still a visible gap for short/empty bodies. Floor is now 0; the body sizes purely to its content so the todo list sits right under the last line of text.
 
+### [0.15.0] Native iOS visual style (switchable)
+- New `AppTheme` (`editorial` / `native`) in `AppSettings`, persisted and mirrored to `AppTheme.current` so the static token accessors can branch. `ContentView` re-keys its content on switch, forcing a rebuild so `Color.note*` / `NoteFont.*` re-resolve — call sites stay unchanged
+- Native returns system semantic colors + SF/Dynamic Type + system serif; editorial keeps the asset palette + Inter Tight / Instrument Serif
+- Structural native chrome (large-title/inline nav bars, standard toolbars, inset-grouped Settings `Form`, swipe actions) on Timeline, Editor, Settings, About, Advanced, Tag filter, Advanced setup, Key import — each conditional on theme so editorial chrome is untouched
+- Style picker lives in Settings both ways (segmented in native, cards in editorial). Verified both themes render in the simulator
+- Branch `feature/v0.15-native-theme`
+
 ---
 
 ## Up next

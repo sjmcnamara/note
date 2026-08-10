@@ -42,6 +42,9 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
+        // Re-key on theme so the whole tree rebuilds and the static token
+        // accessors (Color.note*, NoteFont.*) re-resolve for the new style.
+        .id(settings.theme)
         .preferredColorScheme(colorScheme)
         .dynamicTypeSize(typeSize)
         .onChange(of: scenePhase) { _, phase in

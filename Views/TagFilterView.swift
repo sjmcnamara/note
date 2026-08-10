@@ -5,6 +5,7 @@ import SwiftData
 
 struct TagFilterView: View {
     let tag: String
+    @EnvironmentObject private var settings: AppSettings
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     // [String] is stored as Transformable in SwiftData — #Predicate cannot filter it at the
@@ -27,12 +28,14 @@ struct TagFilterView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            NavBar(
-                title: tag,
-                onBack: { dismiss() },
-                onRename: { renameDraft = tag; showRename = true },
-                onDelete: { showDeleteConfirm = true }
-            )
+            if settings.theme == .editorial {
+                NavBar(
+                    title: tag,
+                    onBack: { dismiss() },
+                    onRename: { renameDraft = tag; showRename = true },
+                    onDelete: { showDeleteConfirm = true }
+                )
+            }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -63,7 +66,25 @@ struct TagFilterView: View {
             }
         }
         .background(Color.noteBg.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(settings.theme == .native ? .visible : .hidden, for: .navigationBar)
+        .navigationTitle(settings.theme == .native ? tag : "")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if settings.theme == .native {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button { renameDraft = tag; showRename = true } label: {
+                            Label("Rename tag", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) { showDeleteConfirm = true } label: {
+                            Label("Delete tag", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+            }
+        }
         .navigationDestination(item: $nestedTag) { TagFilterView(tag: $0) }
         .navigationDestination(item: $editingNote) { EditorView(note: $0) }
         .alert("Rename tag", isPresented: $showRename) {

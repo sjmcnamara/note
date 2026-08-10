@@ -3,6 +3,8 @@ import SwiftUI
 // MARK: - AboutView
 
 struct AboutView: View {
+    @EnvironmentObject private var settings: AppSettings
+
     private var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
     }
@@ -14,7 +16,9 @@ struct AboutView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.sectionGap) {
-                AboutNavBar()
+                if settings.theme == .editorial {
+                    AboutNavBar()
+                }
 
                 VStack(alignment: .leading, spacing: Space.l) {
                     Text("NO.TE")
@@ -43,7 +47,9 @@ struct AboutView: View {
             .padding(.bottom, Space.sectionGap * 2)
         }
         .background(Color.noteBg.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(settings.theme == .native ? .visible : .hidden, for: .navigationBar)
+        .navigationTitle(settings.theme == .native ? "About" : "")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     @ViewBuilder

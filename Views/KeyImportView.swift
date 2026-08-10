@@ -4,6 +4,7 @@ import SwiftUI
 
 struct KeyImportView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var identityService: IdentityService
     @State private var nsec: String = ""
     @State private var validation: NsecValidator.Result = .empty
@@ -14,7 +15,9 @@ struct KeyImportView: View {
     var body: some View {
         ZStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 0) {
-                NavBar { dismiss() }
+                if settings.theme == .editorial {
+                    NavBar { dismiss() }
+                }
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.sectionGap) {
@@ -50,7 +53,9 @@ struct KeyImportView: View {
             }
         }
         .background(Color.noteBg.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(settings.theme == .native ? .visible : .hidden, for: .navigationBar)
+        .navigationTitle(settings.theme == .native ? "Import key" : "")
+        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: nsec) { _, newValue in
             scheduleValidation(for: newValue)
         }

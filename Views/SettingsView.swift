@@ -3,23 +3,153 @@ import SwiftUI
 // MARK: - SettingsView
 
 struct SettingsView: View {
+    @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var identityService: IdentityService
     @EnvironmentObject private var lockService: AppLockService
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Space.sectionGap) {
-                SettingsNavBar()
-                IdentitySection()
-                AppearanceSection()
-                AdvancedNavCard(lockService: lockService)
-                AboutNavCard()
+        if settings.theme == .native {
+            NativeSettingsView(lockService: lockService)
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.sectionGap) {
+                    SettingsNavBar()
+                    IdentitySection()
+                    AppearanceSection()
+                    AdvancedNavCard(lockService: lockService)
+                    AboutNavCard()
+                }
+                .padding(.horizontal, Space.gutterH)
+                .padding(.bottom, Space.sectionGap * 2)
             }
-            .padding(.horizontal, Space.gutterH)
-            .padding(.bottom, Space.sectionGap * 2)
+            .background(Color.noteBg.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
         }
-        .background(Color.noteBg.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+// MARK: - Native settings (inset-grouped Form)
+
+private struct NativeSettingsView: View {
+    @ObservedObject var lockService: AppLockService
+    @EnvironmentObject private var settings: AppSettings
+    @EnvironmentObject private var identityService: IdentityService
+    @AppStorage("appearance") private var appearanceRaw = "system"
+    @State private var copyConfirmed = false
+
+    var body: some View {
+        Form {
+            if let identity = identityService.identity {
+                Section("Identity") {
+                    HStack(spacing: Space.l) {
+                        IdentityAvatar(npub: identity.npub)
+                        VStack(alignment: .leading, spacing: Space.xxs) {
+                            Text("Public key · npub")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(identity.shortNpub)
+                                .font(.system(.footnote, design: .monospaced))
+                                .lineLimit(1)
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 2)
+
+                    Button {
+                        UIPasteboard.general.string = identity.npub
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        withAnimation { copyConfirmed = true }
+                        Task {
+                            try? await Task.sleep(for: .seconds(2))
+                            withAnimation { copyConfirmed = false }
+                        }
+                    } label: {
+                        Label(copyConfirmed ? "Copied" : "Copy public key",
+                              systemImage: copyConfirmed ? "checkmark" : "doc.on.doc")
+                    }
+                }
+            }
+
+            Section("Style") {
+                Picker("App style", selection: $settings.theme) {
+                    ForEach(AppTheme.allCases, id: \.self) { theme in
+                        Text(theme.label).tag(theme)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+
+            Section("Appearance") {
+                Picker("Theme", selection: $appearanceRaw) {
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
+                    Text("System").tag("system")
+                }
+                TextSizeSliderRow()
+            }
+
+            Section("Advanced") {
+                NavigationLink {
+                    AdvancedSettingsView()
+                } label: {
+                    Label("Keys & Backup", systemImage: "key")
+                }
+                Toggle(isOn: Binding(
+                    get: { lockService.lockEnabled },
+                    set: { lockService.setLockEnabled($0) }
+                )) {
+                    Label("Lock with Face ID", systemImage: "faceid")
+                }
+            }
+
+            Section {
+                NavigationLink {
+                    AboutView()
+                } label: {
+                    Label("About NO.TE", systemImage: "info.circle")
+                }
+            }
+        }
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.large)
+    }
+}
+
+private struct TextSizeSliderRow: View {
+    @EnvironmentObject private var settings: AppSettings
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            HStack {
+                Text("Text size")
+                Spacer()
+                Text(label).foregroundStyle(.secondary).monospacedDigit()
+            }
+            HStack(spacing: Space.m) {
+                Image(systemName: "textformat.size.smaller").foregroundStyle(.secondary)
+                Slider(
+                    value: Binding(
+                        get: { Double(settings.textSizeStep) },
+                        set: { settings.textSizeStep = Int($0.rounded()) }
+                    ),
+                    in: -3...3, step: 1
+                )
+                Image(systemName: "textformat.size.larger").foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    private var label: String {
+        switch settings.textSizeStep {
+        case -3: return "X-Small"
+        case -2: return "Smaller"
+        case -1: return "Small"
+        case  1: return "Large"
+        case  2: return "Larger"
+        case  3: return "X-Large"
+        default: return "Default"
+        }
     }
 }
 
@@ -114,9 +244,45 @@ private struct IdentityRow: View {
 private struct AppearanceSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.l) {
+            SectionLabel("Style")
+            StylePicker()
             SectionLabel("Appearance")
             AppearancePicker()
             TextSizeRow()
+        }
+    }
+}
+
+private struct StylePicker: View {
+    @EnvironmentObject private var settings: AppSettings
+
+    var body: some View {
+        HStack(spacing: Space.l) {
+            ForEach(AppTheme.allCases, id: \.self) { theme in
+                let active = settings.theme == theme
+                Button {
+                    withAnimation(.easeInOut(duration: Motion.toggleSwap)) { settings.theme = theme }
+                } label: {
+                    VStack(alignment: .leading, spacing: Space.xxs) {
+                        Text(theme.label)
+                            .font(NoteFont.titleS)
+                            .foregroundStyle(active ? Color.noteInk : Color.noteInkDim)
+                        Text(theme.blurb)
+                            .font(NoteFont.captionS)
+                            .foregroundStyle(Color.noteInkMute)
+                            .lineLimit(2, reservesSpace: true)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(Space.l)
+                    .background(Color.noteAlt, in: RoundedRectangle(cornerRadius: Radius.xxl))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: Radius.xxl)
+                            .strokeBorder(active ? Color.noteInk : Color.noteRule, lineWidth: active ? 2 : 1)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 }

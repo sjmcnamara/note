@@ -9,6 +9,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.15.0] — 2026-08-10
+
+### Added
+- **Native iOS visual style, switchable in Settings.** A new `Native` app style sits alongside the original `Editorial` look. Native swaps in San Francisco / Dynamic Type, system semantic colors (so light/dark follow the OS palette), and stock iOS chrome — large-title navigation bars, standard toolbars, an inset-grouped `Form` for Settings, and the system serif for the one italic "moment" per screen. Editorial is unchanged and remains the default.
+- Style picker in Settings (segmented control in Native, card picker in Editorial) so you can switch either way. Choice persists across launches.
+
+### Changed
+- `Design/Tokens.swift` — `Color.note*` and `NoteFont.*` are now computed and branch on the active `AppTheme`. Call sites are unchanged; the root re-keys its content on switch so tokens re-resolve.
+- Timeline, Editor, Settings, About, Advanced, Tag filter, Advanced setup, and Key import gain native large-title/inline nav bars and standard toolbars in the Native style; each keeps its custom chrome in Editorial.
+- `MARKETING_VERSION` 0.15.0, `CURRENT_PROJECT_VERSION` 19.
+
+---
+
 ## [0.14.3] — 2026-08-10
 
 ### Fixed

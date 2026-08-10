@@ -14,6 +14,7 @@ struct EditorView: View {
     @State private var confirmDelete = false
     @State private var deleted = false
     @FocusState private var focusedTodo: UUID?
+    @EnvironmentObject private var settings: AppSettings
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
@@ -28,14 +29,16 @@ struct EditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            EditorTopBar(
-                saving: saving,
-                showPreview: $showPreview,
-                shareText: exportMarkdown,
-                onBack: { dismiss() },
-                onCopy: { UIPasteboard.general.string = exportMarkdown },
-                onDelete: { confirmDelete = true }
-            )
+            if settings.theme == .editorial {
+                EditorTopBar(
+                    saving: saving,
+                    showPreview: $showPreview,
+                    shareText: exportMarkdown,
+                    onBack: { dismiss() },
+                    onCopy: { UIPasteboard.general.string = exportMarkdown },
+                    onDelete: { confirmDelete = true }
+                )
+            }
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -80,8 +83,10 @@ struct EditorView: View {
             }
         }
         .background(Color.noteBg.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
-        // Hidden nav bar disables the system back swipe; restore it manually.
+        .toolbar(settings.theme == .native ? .visible : .hidden, for: .navigationBar)
+        .navigationBarTitleDisplayMode(.inline)
+        // Editorial hides the nav bar, which disables the system back swipe;
+        // restore it manually. (Native keeps the standard bar + swipe.)
         .simultaneousGesture(
             DragGesture(minimumDistance: 20, coordinateSpace: .global)
                 .onEnded { value in
@@ -101,6 +106,32 @@ struct EditorView: View {
             // body's UITextView carries the same bar as its input accessory.
             ToolbarItemGroup(placement: .keyboard) {
                 keyboardBar(chrome: false)
+            }
+            if settings.theme == .native {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation(.easeInOut(duration: Motion.toggleSwap)) { showPreview.toggle() }
+                    } label: {
+                        Image(systemName: showPreview ? "eye.fill" : "eye")
+                    }
+                    .accessibilityLabel(showPreview ? "Edit mode" : "Preview mode")
+
+                    ShareLink(item: exportMarkdown) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                    .disabled(exportMarkdown.isEmpty)
+
+                    Menu {
+                        Button { UIPasteboard.general.string = exportMarkdown } label: {
+                            Label("Copy markdown", systemImage: "doc.on.doc")
+                        }
+                        Button(role: .destructive) { confirmDelete = true } label: {
+                            Label("Delete note", systemImage: "trash")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                }
             }
         }
         .onChange(of: note.title) { _, _ in markEdited() }

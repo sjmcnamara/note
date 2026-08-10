@@ -6,6 +6,7 @@ import SwiftData
 struct TimelineView: View {
     @Query(sort: \Note.createdAt, order: .reverse) private var notes: [Note]
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var settings: AppSettings
     @State private var showSearch = false
     @State private var showRecorder = false
     @State private var composeNote: Note?
@@ -32,7 +33,9 @@ struct TimelineView: View {
         NavigationStack {
             ZStack(alignment: .bottom) {
                 VStack(spacing: 0) {
-                    TimelineHeader(showSearch: $showSearch)
+                    if settings.theme == .editorial {
+                        TimelineHeader(showSearch: $showSearch)
+                    }
 
                     if notes.isEmpty {
                         EmptyTimelineView(
@@ -68,7 +71,7 @@ struct TimelineView: View {
                 .padding(.bottom, 24)
             }
             .background(Color.noteBg.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
+            .modifier(TimelineChrome(theme: settings.theme, showSearch: $showSearch))
             .navigationDestination(item: $composeNote) { note in
                 EditorView(note: note, isNew: true)
             }
@@ -131,6 +134,37 @@ struct TimelineView: View {
             } label: {
                 Label("Delete", systemImage: "trash")
             }
+        }
+    }
+}
+
+// MARK: - Chrome
+
+/// Editorial hides the nav bar (a custom header stands in); native uses a
+/// stock large-title nav bar with search + settings toolbar buttons.
+private struct TimelineChrome: ViewModifier {
+    let theme: AppTheme
+    @Binding var showSearch: Bool
+
+    func body(content: Content) -> some View {
+        if theme == .native {
+            content
+                .navigationTitle("NO.TE")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbar {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.15)) { showSearch = true }
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                        }
+                        NavigationLink { SettingsView() } label: {
+                            Image(systemName: "gearshape")
+                        }
+                    }
+                }
+        } else {
+            content.toolbar(.hidden, for: .navigationBar)
         }
     }
 }

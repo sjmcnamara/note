@@ -4,6 +4,7 @@ import SwiftUI
 
 struct AdvancedSetupView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var identityService: IdentityService
     @State private var showImport = false
     @State private var toastMessage: String?
@@ -13,7 +14,9 @@ struct AdvancedSetupView: View {
     var body: some View {
         ZStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 0) {
-                NavBar { dismiss() }
+                if settings.theme == .editorial {
+                    NavBar { dismiss() }
+                }
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.sectionGap) {
@@ -54,7 +57,16 @@ struct AdvancedSetupView: View {
             }
         }
         .background(Color.noteBg.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(settings.theme == .native ? .visible : .hidden, for: .navigationBar)
+        .navigationTitle(settings.theme == .native ? "Set up keys" : "")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if settings.theme == .native {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { dismiss() } label: { Image(systemName: "chevron.left") }
+                }
+            }
+        }
         .navigationDestination(isPresented: $showImport) {
             KeyImportView(onImported: handleCompleted)
         }

@@ -5,6 +5,7 @@ import LocalAuthentication
 
 struct AdvancedSettingsView: View {
     @EnvironmentObject private var identityService: IdentityService
+    @EnvironmentObject private var settings: AppSettings
     var backup: MockBackup = MockBackup()
     @State private var revealNsec = false
     @State private var baselineNpub: String?
@@ -14,7 +15,9 @@ struct AdvancedSettingsView: View {
         ZStack(alignment: .top) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.sectionGap) {
-                    AdvancedNavBar()
+                    if settings.theme == .editorial {
+                        AdvancedNavBar()
+                    }
                     if let identity = identityService.identity {
                         IdentityCard(identity: identity, revealNsec: $revealNsec)
                     }
@@ -33,7 +36,9 @@ struct AdvancedSettingsView: View {
             }
         }
         .background(Color.noteBg.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(settings.theme == .native ? .visible : .hidden, for: .navigationBar)
+        .navigationTitle(settings.theme == .native ? "Keys & Backup" : "")
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if baselineNpub == nil { baselineNpub = identityService.identity?.npub }
         }
