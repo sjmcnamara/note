@@ -9,6 +9,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.14.3] — 2026-08-10
+
+### Fixed
+- **Todo rows jumped around while typing and were missing from preview.** `Note.todos` is a SwiftData to-many relationship, which is unordered — SwiftData re-materializes the array on every save, and since each keystroke schedules one, the rows kept reshuffling (the animated "saving" flag made the reshuffle visibly jump). `TodoItem` now carries an explicit `order: Int` (lightweight migration) and rows always render sorted by it; `TodoRow` binds to the `@Bindable` model object instead of a binding into the volatile array, so typing no longer churns the whole list. Preview mode now renders a read-only todo list (checkboxes + strikethrough) instead of showing only the body.
+
+### Changed
+- `MARKETING_VERSION` 0.14.3, `CURRENT_PROJECT_VERSION` 18.
+
+---
+
 ## [0.14.2] — 2026-08-10
 
 ### Fixed

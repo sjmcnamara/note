@@ -5,11 +5,15 @@ import SwiftData
     var id: UUID
     var text: String
     var done: Bool
+    // Explicit ordering — SwiftData to-many relationships are unordered and
+    // reshuffle on save, so rows are always displayed sorted by this.
+    var order: Int
 
-    init(text: String, done: Bool = false) {
+    init(text: String, done: Bool = false, order: Int = 0) {
         self.id = UUID()
         self.text = text
         self.done = done
+        self.order = order
     }
 }
 

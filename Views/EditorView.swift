@@ -48,7 +48,16 @@ struct EditorView: View {
                     }
 
                     if showPreview {
-                        MarkdownPreview(text: note.body)
+                        if note.body.isEmpty && note.todos.isEmpty {
+                            MarkdownPreview(text: "")
+                        } else {
+                            if !note.body.isEmpty {
+                                MarkdownPreview(text: note.body)
+                            }
+                            if !note.todos.isEmpty {
+                                TodoPreview(todos: note.todos.sorted { $0.order < $1.order })
+                            }
+                        }
                     } else {
                         // With todos present the body hugs its content so the
                         // todo list sits right under the text; without them it
@@ -151,11 +160,12 @@ struct EditorView: View {
     }
 
     private func addTodo() {
-        if let last = note.todos.last, last.text.isEmpty {
+        if let last = note.todos.max(by: { $0.order < $1.order }), last.text.isEmpty {
             focusedTodo = last.id
             return
         }
-        let item = TodoItem(text: "")
+        let nextOrder = (note.todos.map(\.order).max() ?? -1) + 1
+        let item = TodoItem(text: "", order: nextOrder)
         modelContext.insert(item)
         note.todos.append(item)
         markEdited()
@@ -513,16 +523,17 @@ private struct TodoSection: View {
                 .foregroundStyle(Color.noteInkMute)
                 .padding(.bottom, Space.m)
 
-            ForEach($note.todos) { $todo in
+            ForEach(note.todos.sorted { $0.order < $1.order }) { todo in
                 TodoRow(
-                    todo: $todo,
+                    todo: todo,
                     focus: focus,
                     onEdit: onEdit,
                     onReturn: onAddTodo,
                     onDelete: {
                         if let idx = note.todos.firstIndex(where: { $0.id == todo.id }) {
-                            modelContext.delete(note.todos[idx])
+                            let item = note.todos[idx]
                             note.todos.remove(at: idx)
+                            modelContext.delete(item)
                             onEdit()
                         }
                     }
@@ -533,8 +544,40 @@ private struct TodoSection: View {
     }
 }
 
+/// Read-only rendering of the todo list for preview mode.
+private struct TodoPreview: View {
+    let todos: [TodoItem]
+
+    var body: some View {
+        let items = todos.filter { !$0.text.isEmpty }
+        if !items.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("To do")
+                    .font(NoteFont.caption)
+                    .foregroundStyle(Color.noteInkMute)
+                    .padding(.bottom, Space.m)
+
+                ForEach(items) { todo in
+                    HStack(alignment: .center, spacing: Space.m) {
+                        Text(todo.done ? "▪" : "▢")
+                            .font(NoteFont.body)
+                            .foregroundStyle(todo.done ? Color.noteInkDim : Color.noteInkMute)
+                        Text(todo.text)
+                            .font(NoteFont.body)
+                            .foregroundStyle(todo.done ? Color.noteInkMute : Color.noteInk)
+                            .strikethrough(todo.done, color: Color.noteInkMute)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.vertical, 3)
+                }
+            }
+            .padding(.top, Space.sectionGap)
+        }
+    }
+}
+
 private struct TodoRow: View {
-    @Binding var todo: TodoItem
+    @Bindable var todo: TodoItem
     var focus: FocusState<UUID?>.Binding
     let onEdit: () -> Void
     let onReturn: () -> Void
