@@ -164,6 +164,12 @@ Build order follows `handoff_claude_code/PROMPTS.md`. One screen per PR. Real No
 ### [0.14.2] Editor layout fix, take 2
 - The 0.13.2 fix left a fixed 120pt floor on the body editor whenever todos were present — still a visible gap for short/empty bodies. Floor is now 0; the body sizes purely to its content so the todo list sits right under the last line of text.
 
+### [0.14.3] Todo editing stability + preview
+- Todo rows jumped around on each keystroke: `Note.todos` is an unordered SwiftData to-many relationship, and since every keystroke schedules a save, SwiftData re-materialized and reshuffled the array each time (the animated "saving" flag made it visibly jump)
+- `TodoItem` gains an explicit `order: Int` (lightweight migration); rows always render sorted by it. `TodoRow` binds to the `@Bindable` model object instead of a binding into the volatile array, so typing no longer churns the whole list
+- Preview mode now renders a read-only todo list (checkboxes + strikethrough) rather than showing only the body
+- Branch `bugfix/v0.14.2-todo-stability` (name predates the 0.14.3 renumber), PR #45
+
 ---
 
 ## Up next
